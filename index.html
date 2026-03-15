@@ -2589,7 +2589,15 @@ function showAI(idx) {
     `;
   });
 }
-
+function jumpToQuiz(slideIdx) {
+  const sec9Idx = sections.findIndex(s => s.hasQuiz);
+  if (sec9Idx < 0) return;
+  sec9Flipped = false;
+  currentSection = sec9Idx;
+  currentSlide = slideIdx;
+  updatePositions(false);
+  setTimeout(() => updatePositions(true), 20);
+}
 function jumpToQuiz(slideIdx) {
   const sec9Idx = sections.findIndex(s => s.hasQuiz);
   if (sec9Idx < 0) return;
