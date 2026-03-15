@@ -2447,7 +2447,7 @@ const questions = [
   {num:'⑲', q:'「ご用件を(自社の)Ｃにお伝えします」', reason:'自社の人間の行為に「お〜する」という謙譲表現を付けるのは誤り。社外の人に対して自社の人間を立てる表現は不要。', correct:'「ご用件をCに伝えます（申し伝えます）」'},
   {num:'⑳', q:'「どうもすみませんでした」', reason:'「どうも」はカジュアルな口語表現でビジネスの謝罪には不適切。また「すみません」より「申し訳ございません」のほうが丁寧で誠意が伝わる。', correct:'「大変申し訳ございませんでした」'},
 ];
- 
+
 // ── 共通API呼び出し ──────────────────────────────────────
 function callAI(systemPrompt, userPrompt) {
   return fetch('/ask', {
@@ -2456,22 +2456,22 @@ function callAI(systemPrompt, userPrompt) {
     body: JSON.stringify({ prompt: userPrompt, systemPrompt }),
   }).then(r => r.json());
 }
- 
+
 // ── submitQuiz ────────────────────────────────────────────
 function submitQuiz(idx) {
   const card  = document.getElementById('qcard' + idx);
   const input = document.getElementById('qinput' + idx);
   const back  = document.getElementById('qback' + idx);
   if (!card || !back) return;
- 
+
   const userAnswer = input ? input.value.trim() : '';
   const qData = questions[idx - 1];
   if (!qData) return;
- 
+
   card.dataset.userAnswer = userAnswer;
   card.classList.add('flipped');
   sec9Flipped = true;
- 
+
   // 裏面HTML生成
   back.innerHTML = `
     <p style="font-size:clamp(12px,1.3vw,15px);color:#27ae60;font-weight:700;margin:0 0 6px;">ANSWER ${qData.num}</p>
@@ -2484,47 +2484,61 @@ function submitQuiz(idx) {
     </div>
     <button onclick="showAI(${idx})" style="padding:6px 18px;border-radius:10px;border:2px solid var(--main-cyan);background:#fff;color:var(--main-cyan);font-size:clamp(12px,1.4vw,15px);font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='var(--main-cyan)';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='var(--main-cyan)'">🤖 AI解説を見る</button>
   `;
- 
+
   // 回答がある場合のみ採点
   if (!userAnswer) return;
- 
-  const systemPrompt = `あなたは日本語の敬語・言葉遣いの採点者です。以下のルールを必ず守って採点してください。
-出力形式：記号1文字（◎○△✕のどれか）＋半角スペース＋20文字以内のコメント、以上のみ。それ以外は絶対に出力しない。
-例：◎ 完璧です！
-例：○ 敬語は正しいですが表現が少し違います
-例：△ 方向性は合っていますが重要な誤りがあります
-例：✕ ら抜き言葉が使われています`;
- 
+
+  const systemPrompt = `あなたは日本語の敬語・言葉遣いの採点者です。
+【絶対に守るルール】
+- 出力は「記号1文字＋半角スペース＋コメント」の形式のみ。
+- 記号だけの出力は絶対禁止。必ずコメントをつけること。
+- コメントは20文字以内の日本語。
+- 前置き・後書き・改行・説明は一切不要。1行のみ出力すること。
+良い例：◎ 完璧です！正しく使えています
+良い例：○ 敬語は正しいですが表現が少し違います
+良い例：△ 方向性は合っていますが重要な誤りがあります
+良い例：✕ ら抜き言葉と方言が含まれています
+悪い例：✕　←これは絶対NG。コメントがないので禁止。`;
+
   const scoringPrompt = `【採点してください】
 問題文（誤った表現）：${qData.q}
 正しい表現：${qData.correct}
 記入者の回答：「${userAnswer}」
- 
+
 【即✕ルール】以下のどれか1つでも該当したら即✕
 - ら抜き言葉（例：見れる・食べれる・寝れる）
 - さ入れ言葉（例：読まさせる・させさせる）
 - 問題文とほぼ同じ表現
 - 敬語になっていない・口語・タメ口・方言
- 
+
 【◎○△の基準】即✕でない場合のみ判定
 - ◎：正しい表現と完全一致または意味・敬語レベルが同等
 - ○：敬語は正しいが表現が少し異なる
 - △：敬語を使おうとしているが重要な部分が誤っている`;
- 
+
   callAI(systemPrompt, scoringPrompt)
     .then(data => {
       const evalEl = document.getElementById('qeval' + idx);
       if (!evalEl) return;
       const text = (data.text || '').trim();
-      // 先頭の記号を取得して保存
       const symbol = text.charAt(0);
       card.dataset.evaluation = symbol;
       const colorMap = { '◎': '#27ae60', '○': '#2980b9', '△': '#e67e22', '✕': '#e74c3c' };
       const color = colorMap[symbol] || 'var(--deep-blue)';
+      // コメントがない場合（記号1文字だけ返ってきた場合）のフォールバック
+      const fallbackComment = {
+        '◎': '完璧です！正しく使えています',
+        '○': '敬語は正しいですが表現が少し違います',
+        '△': '方向性は合っていますが重要な誤りがあります',
+        '✕': '敬語の使い方を見直しましょう',
+      };
+      const displayText = text.length <= 1
+        ? `${symbol} ${fallbackComment[symbol] || ''}` 
+        : text;
       evalEl.innerHTML = `
         <span style="font-size:11px;color:var(--text-light);">あなたの回答：</span>
         <span style="font-weight:600;">${userAnswer}</span>
-        <span style="font-size:clamp(14px,1.6vw,18px);font-weight:700;color:${color};margin-left:4px;">${text}</span>
+        <span style="font-size:clamp(14px,1.6vw,18px);font-weight:700;color:${color};margin-left:4px;">${displayText}</span>
       `;
     })
     .catch(() => {
@@ -2532,24 +2546,24 @@ function submitQuiz(idx) {
       if (evalEl) evalEl.innerHTML = `<span style="font-size:11px;color:var(--text-light);">あなたの回答：</span><span style="font-weight:600;">${userAnswer}</span>`;
     });
 }
- 
+
 // ── showAI ────────────────────────────────────────────────
 function showAI(idx) {
   const qData = questions[idx - 1];
   if (!qData) return;
- 
+
   const card       = document.getElementById('qcard' + idx);
   const userAnswer = card ? (card.dataset.userAnswer || '') : '';
   const evaluation = card ? (card.dataset.evaluation || '') : '';
- 
+
   // モーダル生成
   const overlay = document.createElement('div');
   overlay.id = 'aiModal';
   overlay.style.cssText = `position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;justify-content:center;`;
- 
+
   const evalLabel = { '◎': '◎ 正解！', '○': '○ 惜しい！', '△': '△ もう少し', '✕': '✕ 不正解' }[evaluation] || '';
   const evalColor = { '◎': '#27ae60', '○': '#2980b9', '△': '#e67e22', '✕': '#e74c3c' }[evaluation] || 'transparent';
- 
+
   overlay.innerHTML = `
     <div id="aiSheet" style="width:100%;background:#fff;border-radius:20px 20px 0 0;padding:16px 20px 36px;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.22,0.61,0.36,1);max-height:65vh;overflow-y:auto;box-sizing:border-box;">
       <!-- ヘッダー -->
@@ -2557,13 +2571,13 @@ function showAI(idx) {
         <span style="font-size:13px;color:var(--main-cyan);font-weight:700;">🤖 AI解説　${qData.num}</span>
         <button onclick="document.getElementById('aiModal').remove()" style="width:32px;height:32px;border-radius:50%;border:none;background:#f0f0f0;color:#666;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
       </div>
- 
+
       <!-- 誤った表現 → 正しい表現 -->
       <div style="background:var(--bg-light);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:clamp(13px,1.5vw,16px);">
         <div style="color:var(--text-light);text-decoration:line-through;margin-bottom:2px;">❌ ${qData.q}</div>
         <div style="color:var(--deep-blue);font-weight:700;">✅ ${qData.correct}</div>
       </div>
- 
+
       ${userAnswer ? `
       <!-- 記入者の回答 -->
       <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;background:#f8f8f8;margin-bottom:10px;font-size:clamp(12px,1.4vw,15px);">
@@ -2571,20 +2585,20 @@ function showAI(idx) {
         <span style="font-weight:600;">${userAnswer}</span>
         ${evalLabel ? `<span style="margin-left:auto;font-weight:700;color:${evalColor};font-size:clamp(13px,1.5vw,16px);">${evalLabel}</span>` : ''}
       </div>` : ''}
- 
+
       <!-- AI解説本文 -->
       <div id="aiModalContent" style="font-size:clamp(13px,1.5vw,16px);color:var(--text-dark);line-height:1.75;">
         <div style="color:var(--text-light);font-size:13px;padding:8px 0;">読み込み中…</div>
       </div>
     </div>
   `;
- 
+
   document.body.appendChild(overlay);
   requestAnimationFrame(() => {
     document.getElementById('aiSheet').style.transform = 'translateY(0)';
   });
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
- 
+
   // AI解説プロンプト
   const evalTone = {
     '◎': '正解なので、正しい理由をより深く理解できるよう前向きに',
@@ -2592,16 +2606,16 @@ function showAI(idx) {
     '△': '方向性は合っていたので、ポジティブに',
     '✕': '次につながるよう前向きに',
   }[evaluation] || '親しみやすい口調で';
- 
+
   const systemPrompt = `あなたは日本語の敬語・言葉遣いの専門家です。${evalTone}解説してください。日本語のみで答えてください。指定された形式を必ず守ってください。`;
- 
+
   const explanationPrompt = userAnswer
     ? `【解説してください】
 誤った表現：${qData.q}
 正しい表現：${qData.correct}
 誤りのポイント：${qData.reason}
 記入者の回答：「${userAnswer}」（採点：${evaluation || '未採点'}）
- 
+
 【出力形式】以下の3行のみ出力。余分な文章・前置き・後書きは不要。
 📌 何が問題？　〔誤りの種類と理由を1文で〕
 💬 あなたの回答　〔その回答が正解・不正解な理由を1文で〕
@@ -2610,11 +2624,11 @@ function showAI(idx) {
 誤った表現：${qData.q}
 正しい表現：${qData.correct}
 誤りのポイント：${qData.reason}
- 
+
 【出力形式】以下の2行のみ出力。余分な文章・前置き・後書きは不要。
 📌 何が問題？　〔誤りの種類と理由を1文で〕
 💡 覚え方　〔正しく使うコツを1文で〕`;
- 
+
   callAI(systemPrompt, explanationPrompt)
     .then(data => {
       const content = document.getElementById('aiModalContent');
@@ -2633,7 +2647,7 @@ function showAI(idx) {
       `;
     });
 }
- 
+
 // ── jumpToQuiz ────────────────────────────────────────────
 function jumpToQuiz(slideIdx) {
   const sec9Idx = sections.findIndex(s => s.hasQuiz);
@@ -2644,7 +2658,7 @@ function jumpToQuiz(slideIdx) {
   updatePositions(false);
   setTimeout(() => updatePositions(true), 20);
 }
- 
+
 function navigate(dir) {
   if (isAnimating) return;
   if (sections[currentSection].hasQuiz && currentSlide >= 2) {
@@ -2764,7 +2778,7 @@ function navigate(dir) {
   }
   updatePositions(true);
 }
- 
+
 function goToSlide(sIdx, hIdx) {
   if (isAnimating) return;
   isAnimating = true;
@@ -2773,7 +2787,7 @@ function goToSlide(sIdx, hIdx) {
   currentSlide = hIdx;
   updatePositions(true);
 }
- 
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
     e.preventDefault();
@@ -2783,7 +2797,7 @@ document.addEventListener('keydown', (e) => {
     navigate(-1);
   }
 });
- 
+
 let touchStartX = 0, touchStartY = 0;
 document.addEventListener('touchstart', (e) => {
   touchStartX = e.touches[0].clientX;
@@ -2800,22 +2814,22 @@ document.addEventListener('touchend', (e) => {
     }
   }
 });
- 
+
 document.addEventListener('wheel', (e) => {
   e.preventDefault();
   if (Math.abs(e.deltaY) > 30) {
     navigate(e.deltaY > 0 ? 1 : -1);
   }
 }, { passive: false });
- 
+
 let sec3Flipped1 = false;
 let sec3Flipped2 = false;
 let sec5Flipped = [false, false, false];
 let sec9Flipped = false;
- 
+
 const SEC3_FROM = '知識人';
 const SEC3_TO   = '儀礼そのもの';
- 
+
 function runTypewriter() {
   const el    = document.getElementById('sec3TypewriterText');
   const label = document.getElementById('sec3TwLabel');
@@ -2846,7 +2860,7 @@ function runTypewriter() {
   }
   deleteChar();
 }
- 
+
 function resetTypewriter() {
   const el    = document.getElementById('sec3TypewriterText');
   const label = document.getElementById('sec3TwLabel');
@@ -2860,7 +2874,7 @@ function resetTypewriter() {
   if (arrow) arrow.style.opacity='0';
   sec3Flipped2 = false;
 }
- 
+
 function runKamakura() {
   const ids = ['k1','k2','k3','k4','k5'];
   ids.forEach(id => { const el = document.getElementById(id); if(el) el.style.opacity = '0'; });
@@ -2868,7 +2882,7 @@ function runKamakura() {
     setTimeout(() => { const el = document.getElementById(id); if(el) el.style.opacity = '1'; }, 800 + i * 700);
   });
 }
- 
+
 function runMeiji() {
   const main = document.getElementById('meijiMain');
   const sub  = document.getElementById('meijiSub');
@@ -2877,7 +2891,7 @@ function runMeiji() {
   setTimeout(() => { if (main) { main.style.opacity='1'; main.style.transform='scale(1)'; } }, 400);
   setTimeout(() => { if (sub)  { sub.style.opacity='1';  sub.style.transform='scale(1)'; } }, 1400);
 }
- 
+
 function openMenu() {
   const overlay = document.getElementById('sectionMenuOverlay');
   overlay.classList.add('open');
@@ -2894,7 +2908,7 @@ function jumpToSection(sIdx) {
   document.getElementById('sectionMenuOverlay').classList.remove('open');
   goToSlide(sIdx, 0);
 }
- 
+
 buildSlides();
 </script>
 </body>
