@@ -2453,11 +2453,7 @@ const questions = [
 ];
 
 
-// ========================================
-// ② submitQuiz関数（1つだけ・重複なし）
-// ========================================
 function submitQuiz(idx) {
-
   const card = document.getElementById('qcard' + idx);
   const input = document.getElementById('qinput' + idx);
   const back = document.getElementById('qback' + idx);
@@ -2466,6 +2462,7 @@ function submitQuiz(idx) {
   const userAnswer = input ? input.value.trim() : '';
   const qData = questions[idx - 1];
   if (!qData) return;
+
   card.dataset.userAnswer = userAnswer;
   card.classList.add('flipped');
   sec9Flipped = true;
@@ -2484,7 +2481,8 @@ function submitQuiz(idx) {
   `;
 
   if (userAnswer) {
-   const prompt = `敬語の採点をしてください。\n【問題の誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n記入者の回答が正しい表現と一致または同等であれば◎、惜しければ△、間違いまたは誤った表現と同じであれば✕を文頭に置いてください。その後、10文字程度の励ましを親しみやすい口調で一言だけ添えてください。他の説明は一切不要です。`;
+    const prompt = `敬語の採点をしてください。\n【問題の誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n以下の基準で採点してください。\n◎：正しい表現と完全一致または同等\n○：意味は合っているが表現が少し違う\n△：方向性は合っているが重要な部分が間違い\n✕：間違い、または問題文をそのまま入力\n記号を文頭に置き、◎なら褒める・○なら惜しいと伝える・△なら励ます・✕なら次へ向けて応援する口調で20文字程度の一言を添えてください。他の説明は一切不要です。`;
+
     fetch('/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2495,6 +2493,7 @@ function submitQuiz(idx) {
       const evalEl = document.getElementById('qeval' + idx);
       if (evalEl) {
         const text = (data.text || '').trim();
+        card.dataset.evaluation = text.charAt(0);
         evalEl.innerHTML = `<span style="font-size:11px;color:var(--text-light);">記入者の回答：</span><span style="font-weight:500;"> ${userAnswer}</span><br><span style="font-size:clamp(14px,1.7vw,18px);color:var(--deep-blue);">${text}</span>`;
       }
     })
@@ -2505,15 +2504,20 @@ function submitQuiz(idx) {
   }
 }
 
-
-// ========================================
-// ③ showAI関数（ボトムシート・全幅・更新済みプロンプト）
-// ========================================
 function showAI(idx) {
   const qData = questions[idx - 1];
   if (!qData) return;
   const card = document.getElementById('qcard' + idx);
   const userAnswer = card ? (card.dataset.userAnswer || '') : '';
+  const evaluation = card ? (card.dataset.evaluation || '') : '';
+
+  const evalTone = {
+    '◎': '正解です。正しい表現をさらに深く理解できるよう',
+    '○': '惜しかったです。もう一歩のところだったので',
+    '△': '方向性は合っていましたが重要な部分が違いました。励ます気持ちで',
+    '✕': '間違いでした。次につながるよう前向きに'
+  }[evaluation] || '親しみやすい口調で';
+
   const overlay = document.createElement('div');
   overlay.id = 'aiModal';
   overlay.style.cssText = `
@@ -2562,7 +2566,8 @@ function showAI(idx) {
     if (e.target === overlay) overlay.remove();
   });
 
-const prompt = `敬語の採点をしてください。\n【問題の誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n記入者の回答が正しい表現と一致または同等であれば◎、惜しければ△、間違いまたは誤った表現と同じであれば✕を文頭に置いてください。その後、10文字程度の励ましを親しみやすい口調で一言だけ添えてください。他の説明は一切不要です。`;
+  const prompt = `以下の敬語の誤りを解説してください。\n【誤った表現】${qData.q}\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\n${userAnswer ? `【記入者の回答】「${userAnswer}」\n` : ''}${evalTone}、以下の順番で親しみやすい口調で100文字以内に説明してください。\n1.何が問題か（一言で）\n2.なぜ間違いか（理由）\n${userAnswer ? '3.記入者の回答がなぜ間違いか\n4.' : '3.'}正しい表現の確認（締め）`;
+
   fetch('/ask', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -2578,6 +2583,7 @@ const prompt = `敬語の採点をしてください。\n【問題の誤った�
     if (content) content.innerHTML = `【誤りの理由】${qData.reason}<br>【正しい表現】${qData.correct}`;
   });
 }
+
 function jumpToQuiz(slideIdx) {
   const sec9Idx = sections.findIndex(s => s.hasQuiz);
   if (sec9Idx < 0) return;
@@ -2615,41 +2621,41 @@ function navigate(dir) {
     if (flipSlides[currentSlide]) {
       const idx = flipIdx[currentSlide];
       if (dir === 1 && !sec5Flipped[idx]) {
-    isAnimating = true;
-    setTimeout(() => isAnimating = false, 1200);
-    const el = document.getElementById(flipSlides[currentSlide]);
-    if (el) el.classList.add('flipped');
-    sec5Flipped[idx] = true;
-    return;
+        isAnimating = true;
+        setTimeout(() => isAnimating = false, 1200);
+        const el = document.getElementById(flipSlides[currentSlide]);
+        if (el) el.classList.add('flipped');
+        sec5Flipped[idx] = true;
+        return;
       }
       if (dir === 1 && sec5Flipped[idx] && currentSlide < 3) {
-    isAnimating = true;
-    const nextIds = { 1: 'flip17b', 2: 'flip17c' };
-    const curEl = document.getElementById(flipSlides[currentSlide]);
-    const nextEl = document.getElementById(nextIds[currentSlide]);
-    if (curEl) curEl.classList.add('sliding-out');
-    if (nextEl) {
-      nextEl.style.visibility = 'visible';
-      nextEl.style.opacity = '0';
-      setTimeout(() => nextEl.classList.add('sliding-in'), 20);
-    }
-    setTimeout(() => {
-      if (curEl) { curEl.classList.remove('sliding-out'); curEl.classList.remove('flipped'); curEl.style.visibility = 'hidden'; }
-      if (nextEl) { nextEl.classList.remove('sliding-in'); nextEl.style.opacity = '1'; nextEl.style.visibility = 'visible'; }
-      sec5Flipped[idx] = false;
-      currentSlide++;
-      updatePositions(false);
-      isAnimating = false;
-    }, 350);
-    return;
+        isAnimating = true;
+        const nextIds = { 1: 'flip17b', 2: 'flip17c' };
+        const curEl = document.getElementById(flipSlides[currentSlide]);
+        const nextEl = document.getElementById(nextIds[currentSlide]);
+        if (curEl) curEl.classList.add('sliding-out');
+        if (nextEl) {
+          nextEl.style.visibility = 'visible';
+          nextEl.style.opacity = '0';
+          setTimeout(() => nextEl.classList.add('sliding-in'), 20);
+        }
+        setTimeout(() => {
+          if (curEl) { curEl.classList.remove('sliding-out'); curEl.classList.remove('flipped'); curEl.style.visibility = 'hidden'; }
+          if (nextEl) { nextEl.classList.remove('sliding-in'); nextEl.style.opacity = '1'; nextEl.style.visibility = 'visible'; }
+          sec5Flipped[idx] = false;
+          currentSlide++;
+          updatePositions(false);
+          isAnimating = false;
+        }, 350);
+        return;
       }
       if (dir === -1 && sec5Flipped[idx]) {
-    isAnimating = true;
-    setTimeout(() => isAnimating = false, 1200);
-    const el = document.getElementById(flipSlides[currentSlide]);
-    if (el) el.classList.remove('flipped');
-    sec5Flipped[idx] = false;
-    return;
+        isAnimating = true;
+        setTimeout(() => isAnimating = false, 1200);
+        const el = document.getElementById(flipSlides[currentSlide]);
+        if (el) el.classList.remove('flipped');
+        sec5Flipped[idx] = false;
+        return;
       }
     }
   }
@@ -2674,47 +2680,22 @@ function navigate(dir) {
   if (sections[currentSection].hasFlip3) {
     if (currentSlide === 1) {
       if (dir === 1 && !sec3Flipped1) {
-    isAnimating = true; setTimeout(() => isAnimating = false, 1200);
-    const c1 = document.getElementById('sec3Flip1a'); const c2 = document.getElementById('sec3Flip1b');
-    if (c1) c1.classList.add('flipped'); if (c2) setTimeout(() => c2 && c2.classList.add('flipped'), 400);
-    sec3Flipped1 = true; return;
+        isAnimating = true; setTimeout(() => isAnimating = false, 1200);
+        const c1 = document.getElementById('sec3Flip1a'); const c2 = document.getElementById('sec3Flip1b');
+        if (c1) c1.classList.add('flipped'); if (c2) setTimeout(() => c2 && c2.classList.add('flipped'), 400);
+        sec3Flipped1 = true; return;
       }
       if (dir === -1 && sec3Flipped1) {
-    isAnimating = true; setTimeout(() => isAnimating = false, 1200);
-    const c1 = document.getElementById('sec3Flip1a'); const c2 = document.getElementById('sec3Flip1b');
-    if (c2) c2.classList.remove('flipped'); if (c1) setTimeout(() => c1 && c1.classList.remove('flipped'), 400);
-    sec3Flipped1 = false; return;
+        isAnimating = true; setTimeout(() => isAnimating = false, 1200);
+        const c1 = document.getElementById('sec3Flip1a'); const c2 = document.getElementById('sec3Flip1b');
+        if (c2) c2.classList.remove('flipped'); if (c1) setTimeout(() => c1 && c1.classList.remove('flipped'), 400);
+        sec3Flipped1 = false; return;
       }
     }
     if (currentSlide === 2) {
       if (dir === 1 && !sec3Flipped2) { isAnimating = true; setTimeout(() => isAnimating = false, 2000); sec3Flipped2 = true; setTimeout(runTypewriter, 3000); return; }
       if (dir === -1 && sec3Flipped2) { isAnimating = true; setTimeout(() => isAnimating = false, 1000); sec3Flipped2 = false; resetTypewriter(); return; }
     }
-  }
-
-  if (dir === 1 && sections[currentSection].hasFlip && currentSlide === 1 && !sec2Flipped) {
-    isAnimating = true;
-    setTimeout(() => isAnimating = false, 1200);
-    const card1 = document.getElementById('sec2Card1');
-    const card2 = document.getElementById('sec2Card2');
-    if (card1 && card2) {
-      card1.classList.add('flipped');
-      setTimeout(() => card2.classList.add('flipped'), 400);
-      sec2Flipped = true;
-    }
-    return;
-  }
-  if (dir === -1 && sections[currentSection].hasFlip && currentSlide === 1 && sec2Flipped) {
-    isAnimating = true;
-    setTimeout(() => isAnimating = false, 1200);
-    const card1 = document.getElementById('sec2Card1');
-    const card2 = document.getElementById('sec2Card2');
-    if (card1 && card2) {
-      card2.classList.remove('flipped');
-      setTimeout(() => card1.classList.remove('flipped'), 400);
-      sec2Flipped = false;
-    }
-    return;
   }
 
   isAnimating = true;
@@ -2744,7 +2725,6 @@ function goToSlide(sIdx, hIdx) {
   if (isAnimating) return;
   isAnimating = true;
   setTimeout(() => isAnimating = false, 1500);
-
   currentSection = sIdx;
   currentSlide = hIdx;
   updatePositions(true);
@@ -2798,7 +2778,6 @@ function runTypewriter() {
   const box   = document.getElementById('sec3TwBox');
   const ba    = document.getElementById('sec3BeforeAfter');
   if (!el) return;
-  // タイピング開始と同時にラベルを変化後に切り替え
   if (label) { label.textContent = '変化後の意味'; label.style.color = 'var(--accent-pink)'; }
   if (box)   box.style.borderColor = 'var(--accent-pink)';
   let text = SEC3_FROM;
@@ -2876,6 +2855,3 @@ function jumpToSection(sIdx) {
 }
 
 buildSlides();
-</script>
-</body>
-</html>
