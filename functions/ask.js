@@ -46,7 +46,7 @@ export async function onRequestPost(context) {
         'X-Title': 'Manners Slide',
       },
       body: JSON.stringify({
-        model: 'openrouter/free',
+        model: 'meta-llama/llama-3.3-70b-instruct:free',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt },
