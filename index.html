@@ -2537,41 +2537,6 @@ const questions = [
   {num:'⑲', q:'「ご用件を(自社の)Ｃにお伝えします」', reason:'自社の人に「お」は不要', correct:'「ご用件をCに伝えます（申し伝えます）」'},
   {num:'⑳', q:'「どうもすみませんでした」', reason:'「どうも」はカジュアル', correct:'「大変申し訳ございませんでした」'},
 ];
-  const qData = questions[idx - 1];
-  if (!qData) return;
-
-  const prompt = userAnswer
-    ? `日本語の敬語・言葉遣いの練習問題です。以下を200文字以内で解説してください。
-
-【誤った表現】${qData.q}
-【誤りのポイント】${qData.reason}
-【正しい表現】${qData.correct}
-
-【受講者の回答】「${userAnswer}」
-
-あなたの回答が正しいか評価し（◎・○・△・✕で）、なぜあなたの回答が間違いなのかを分かりやすく簡潔に説明してください。`
-    : `日本語の敬語・言葉遣いの練習問題です。以下を150文字以内で解説してください。
-
-【誤った表現】${qData.q}
-【誤りのポイント】${qData.reason}
-【正しい表現】${qData.correct}
-
-なぜ元の表現が間違いなのかを分かりやすく簡潔に説明してください。`;
-
-  fetch("/ask", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt })
-  })
-  .then(r => r.json())
-  .then(data => {
-    const text = data.text || "解説を取得できませんでした。";
-    aiBox.innerHTML = '<span style="font-size:12px;color:var(--main-cyan);font-weight:700;">🤖 AI解説</span><br>' + text.replace(/\n/g, '<br>');
-  })
-  .catch(() => {
-    aiBox.innerHTML = '<span style="color:var(--text-light);font-size:13px;">解説を取得できませんでした。</span>';
-  });
-}
 
 function jumpToQuiz(slideIdx) {
   const sec9Idx = sections.findIndex(s => s.hasQuiz);
