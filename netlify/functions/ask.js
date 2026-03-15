@@ -5,11 +5,8 @@ exports.handler = async (event) => {
   try {
     const { prompt } = JSON.parse(event.body);
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return { statusCode: 500, body: JSON.stringify({ text: 'エラー: APIキーが設定されていません' }) };
-    }
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -20,10 +17,8 @@ exports.handler = async (event) => {
       }
     );
     const data = await res.json();
-    if (!res.ok) {
-      return { statusCode: 500, body: JSON.stringify({ text: 'Geminiエラー: ' + JSON.stringify(data.error) }) };
-    }
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '解説を取得できませんでした。';
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text
+      || '解説を取得できませんでした。';
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
