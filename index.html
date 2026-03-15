@@ -2452,7 +2452,7 @@ function submitQuiz(idx) {
   `;
 
   if (userAnswer) {
-   const prompt = `以下の敬語練習問題で、受講者の回答を厳しめに採点してください。\n【誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【受講者の回答】「${userAnswer}」\n◎○△✕で採点し、親しみやすい口調で励ましの一言を添えてください。20文字以内で返してください。記号は文頭に置いてください。`;  fetch('/ask', {
+   const prompt = `以下の敬語練習問題で、あなたの回答を厳しめに採点してください。\n【誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【あなたの回答】「${userAnswer}」\n◎○△✕で採点し、親しみやすい口調で励ましの一言を添えてください。20文字以内で返してください。記号は文頭に置いてください。`;  fetch('/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
