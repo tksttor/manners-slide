@@ -2425,6 +2425,7 @@ function updateUI() {
   }
 }
 
+
 function submitQuiz(idx) {
   const card = document.getElementById('qcard' + idx);
   const input = document.getElementById('qinput' + idx);
@@ -2436,7 +2437,7 @@ function submitQuiz(idx) {
   if (!qData) return;
 
   card.classList.add('flipped');
-  sec9Flipped = true;  // ← 元のまま残す
+  sec9Flipped = true;
 
   back.innerHTML = `
     <p style="font-size:clamp(13px,1.5vw,17px);color:#27ae60;font-weight:700;margin:0 0 4px;">ANSWER ${qData.num}</p>
@@ -2452,7 +2453,9 @@ function submitQuiz(idx) {
   `;
 
   if (userAnswer) {
-   const prompt = `以下の敬語練習問題で、あなたの回答を厳しめに採点してください。\n【誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【あなたの回答】「${userAnswer}」\n◎○△✕で採点し、親しみやすい口調で励ましの一言を添えてください。20文字以内で返してください。記号は文頭に置いてください。`;  fetch('/ask', {
+    const prompt = `以下の敬語練習問題で、あなたの回答を厳しめに採点してください。\n【誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【あなたの回答】「${userAnswer}」\n◎○△✕で採点し、「△　惜しかったね。しっかり学んで次はがんばりましょう。」のような口調とボリュームで、親しみやすく励ましてください。記号は文頭に置いてください。`;
+
+    fetch('/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
@@ -2462,7 +2465,7 @@ function submitQuiz(idx) {
       const evalEl = document.getElementById('qeval' + idx);
       if (evalEl) {
         const text = (data.text || '').trim();
-        evalEl.innerHTML = `<span style="font-size:11px;color:var(--text-light);">あなたの回答：</span><span style="font-weight:500;"> ${userAnswer}</span><br><span style="font-size:clamp(16px,2vw,22px);font-weight:700;color:var(--deep-blue);">${text}</span>`;
+        evalEl.innerHTML = `<span style="font-size:11px;color:var(--text-light);">あなたの回答：</span><span style="font-weight:500;"> ${userAnswer}</span><br><span style="font-size:clamp(14px,1.7vw,18px);color:var(--deep-blue);">${text}</span>`;
       }
     })
     .catch(() => {
@@ -2471,45 +2474,64 @@ function submitQuiz(idx) {
     });
   }
 }
+
 function showAI(idx) {
   const qData = questions[idx - 1];
   if (!qData) return;
 
-  // モーダル作成
+  // オーバーレイ
   const overlay = document.createElement('div');
   overlay.id = 'aiModal';
   overlay.style.cssText = `
     position:fixed;inset:0;z-index:999;
     background:rgba(0,0,0,0.5);
-    display:flex;align-items:center;justify-content:center;
-    padding:24px;
+    display:flex;align-items:flex-end;justify-content:center;
   `;
 
-  const modal = document.createElement('div');
-  modal.style.cssText = `
-    background:#fff;border-radius:20px;
-    padding:28px 32px;max-width:640px;width:100%;
-    box-shadow:0 8px 40px rgba(0,0,0,0.2);
-    position:relative;max-height:80vh;overflow-y:auto;
+  // ボトムシート
+  const sheet = document.createElement('div');
+  sheet.style.cssText = `
+    width:100%;max-width:720px;
+    background:#fff;
+    border-radius:20px 20px 0 0;
+    padding:20px 24px 40px;
+    transform:translateY(100%);
+    transition:transform 0.35s cubic-bezier(0.22,0.61,0.36,1);
+    position:relative;
+    max-height:70vh;
+    overflow-y:auto;
   `;
 
-  modal.innerHTML = `
-    <button onclick="document.getElementById('aiModal').remove()" style="position:absolute;top:14px;right:16px;border:none;background:none;font-size:22px;cursor:pointer;color:var(--text-light);">✕</button>
+  sheet.innerHTML = `
+    <button onclick="document.getElementById('aiModal').remove()"
+      style="position:absolute;top:14px;right:16px;
+        width:40px;height:40px;border-radius:50%;
+        border:none;background:var(--accent-pink);
+        color:#fff;font-size:20px;font-weight:900;
+        cursor:pointer;display:flex;align-items:center;
+        justify-content:center;
+        box-shadow:0 4px 12px rgba(233,30,124,0.4);
+        transition:transform 0.2s;">✕</button>
     <p style="font-size:14px;color:var(--main-cyan);font-weight:700;margin:0 0 10px;">🤖 AI解説</p>
     <p style="font-size:clamp(13px,1.5vw,17px);color:var(--text-light);margin:0 0 10px;text-decoration:line-through;">❌ ${qData.q}</p>
     <p style="font-size:clamp(15px,1.8vw,20px);font-weight:700;color:var(--deep-blue);background:var(--bg-light);padding:8px 14px;border-radius:10px;border-left:5px solid #27ae60;margin:0 0 16px;">✅ ${qData.correct}</p>
     <div id="aiModalContent" style="font-size:clamp(14px,1.6vw,18px);color:var(--text-dark);line-height:1.8;">読み込み中…</div>
   `;
 
-  overlay.appendChild(modal);
+  overlay.appendChild(sheet);
   document.body.appendChild(overlay);
 
-  // オーバーレイクリックで閉じる
+  // アニメーション
+  requestAnimationFrame(() => {
+    sheet.style.transform = 'translateY(0)';
+  });
+
+  // 背景クリックで閉じる
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.remove();
   });
 
-  const prompt = `以下の敬語練習問題を150文字以内であなたの回答とともに解説してください。\n【誤った表現】${qData.q}\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\n親しみやすい正しい日本語で優しく解説してね。`;
+  const prompt = `以下の敬語の誤りを解説してください。\n【誤った表現】${qData.q}\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\n「△　惜しかったね。しっかり学んで次はがんばりましょう。」のような親しみやすい口調とボリュームで、なぜ間違いなのかを分かりやすく説明してください。`;
 
   fetch('/ask', {
     method: 'POST',
