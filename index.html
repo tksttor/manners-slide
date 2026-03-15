@@ -2457,6 +2457,7 @@ const questions = [
 // ② submitQuiz関数（1つだけ・重複なし）
 // ========================================
 function submitQuiz(idx) {
+
   const card = document.getElementById('qcard' + idx);
   const input = document.getElementById('qinput' + idx);
   const back = document.getElementById('qback' + idx);
@@ -2465,7 +2466,7 @@ function submitQuiz(idx) {
   const userAnswer = input ? input.value.trim() : '';
   const qData = questions[idx - 1];
   if (!qData) return;
-
+  card.dataset.userAnswer = userAnswer;
   card.classList.add('flipped');
   sec9Flipped = true;
 
@@ -2511,7 +2512,8 @@ function submitQuiz(idx) {
 function showAI(idx) {
   const qData = questions[idx - 1];
   if (!qData) return;
-
+  const card = document.getElementById('qcard' + idx);
+  const userAnswer = card ? (card.dataset.userAnswer || '') : '';
   const overlay = document.createElement('div');
   overlay.id = 'aiModal';
   overlay.style.cssText = `
