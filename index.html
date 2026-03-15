@@ -2481,8 +2481,7 @@ function submitQuiz(idx) {
   `;
 
   if (userAnswer) {
-    const prompt = `敬語の採点をしてください。\n【問題の誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n以下の基準で採点してください。\n◎：正しい表現と完全一致または同等\n○：意味は合っているが表現が少し違う\n△：方向性は合っているが重要な部分が間違い\n✕：間違い、または問題文をそのまま入力\n記号を文頭に置き、◎なら褒める・○なら惜しいと伝える・△なら励ます・✕なら次へ向けて応援する口調で20文字程度の一言を添えてください。他の説明は一切不要です。`;
-
+    const prompt = `以下の敬語練習問題で、記入者の回答を採点してください。必ず日本語だけで答えてください。\n【問題の誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n以下の基準で採点してください。\n◎：正しい表現と完全一致または同等\n○：意味は合っているが表現が少し違う\n△：方向性は合っているが重要な部分が間違い\n✕：間違い、または問題文をそのまま入力\n記号を文頭に置き、◎なら褒める・○なら惜しいと伝える・△なら励ます・✕なら次へ向けて応援する口調で20文字程度の一言を添えてください。他の説明は一切不要です。`;
     fetch('/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2566,8 +2565,7 @@ function showAI(idx) {
     if (e.target === overlay) overlay.remove();
   });
 
-  const prompt = `以下の敬語の誤りを解説してください。\n【誤った表現】${qData.q}\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\n${userAnswer ? `【記入者の回答】「${userAnswer}」\n` : ''}${evalTone}、以下の順番で親しみやすい口調で100文字以内に説明してください。\n1.何が問題か（一言で）\n2.なぜ間違いか（理由）\n${userAnswer ? '3.記入者の回答がなぜ間違いか\n4.' : '3.'}正しい表現の確認（締め）`;
-
+ const prompt = `以下の敬語の誤りを解説してください。必ず日本語だけで答えてください。\n【誤った表現】${qData.q}\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\n${userAnswer ? `【記入者の回答】「${userAnswer}」\n` : ''}${evalTone}口調で、なぜ間違いなのかと正しい表現を80文字以内の自然な文章で説明してください。番号・記号・ローマ字は使わないでください。`;
   fetch('/ask', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
