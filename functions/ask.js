@@ -1,17 +1,14 @@
 export async function onRequestPost(context) {
-  // CORSヘッダー
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  // プリフライトリクエスト対応
   if (context.request.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // APIキーの存在確認
   const apiKey = context.env.GROQ_API_KEY;
   if (!apiKey) {
     return Response.json(
@@ -20,11 +17,11 @@ export async function onRequestPost(context) {
     );
   }
 
-  // リクエストボディの取得
-  let prompt;
+  let prompt, systemPrompt;
   try {
     const body = await context.request.json();
     prompt = body.prompt;
+    systemPrompt = body.systemPrompt || 'あなたは日本語の敬語・言葉遣いの専門家です。指示された形式を厳守して回答してください。日本語のみで答えてください。';
   } catch {
     return Response.json(
       { text: 'エラー: リクエストの形式が正しくありません' },
@@ -39,7 +36,6 @@ export async function onRequestPost(context) {
     );
   }
 
-  // Groq API呼び出し
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -48,18 +44,13 @@ export async function onRequestPost(context) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         messages: [
-          {
-            role: 'system',
-            content: 'あなたは日本語の敬語・言葉遣いの専門家です。200文字以内で簡潔に解説してください。',
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt },
         ],
-        max_tokens: 300,
+        max_tokens: 200,
+        temperature: 0.2,
       }),
     });
 
@@ -73,10 +64,9 @@ export async function onRequestPost(context) {
     }
 
     const data = await res.json();
-    const text =
-      data.choices?.[0]?.message?.content || '解説を取得できませんでした。';
-
+    const text = data.choices?.[0]?.message?.content || '解説を取得できませんでした。';
     return Response.json({ text }, { headers: corsHeaders });
+
   } catch (err) {
     console.error('Fetch error:', err);
     return Response.json(
