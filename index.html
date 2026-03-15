@@ -2475,7 +2475,7 @@ function submitQuiz(idx) {
     <p style="font-size:clamp(18px,2.2vw,26px);font-weight:700;color:var(--deep-blue);background:var(--bg-light);padding:8px 16px;border-radius:10px;border-left:5px solid #27ae60;margin:0 0 10px;width:100%;box-sizing:border-box;">✅ ${qData.correct}</p>
     <div id="qeval${idx}" style="width:100%;box-sizing:border-box;background:var(--accent-yellow-light);border-radius:8px;padding:8px 14px;font-size:clamp(14px,1.7vw,18px);margin-bottom:10px;border-left:4px solid var(--accent-yellow);min-height:36px;">
       ${userAnswer
-        ? `<span style="font-size:11px;color:var(--text-light);">あなたの回答：</span><span style="font-weight:500;"> ${userAnswer}</span><br><span style="color:var(--text-light);font-size:12px;">評価中…</span>`
+        ? `<span style="font-size:11px;color:var(--text-light);">記入者の回答：</span><span style="font-weight:500;"> ${userAnswer}</span><br><span style="color:var(--text-light);font-size:12px;">評価中…</span>`
         : `<span style="color:var(--text-light);font-weight:600;">未回答</span>`}
     </div>
     <button id="qaibtn${idx}" onclick="showAI(${idx})" style="padding:7px 20px;border-radius:10px;border:2px solid var(--main-cyan);background:#fff;color:var(--main-cyan);font-size:clamp(13px,1.5vw,16px);font-weight:700;cursor:pointer;transition:all 0.2s;margin-bottom:8px;" onmouseover="this.style.background='var(--main-cyan)';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='var(--main-cyan)'">🤖 AI解説を見る</button>
@@ -2495,12 +2495,12 @@ function submitQuiz(idx) {
       const evalEl = document.getElementById('qeval' + idx);
       if (evalEl) {
         const text = (data.text || '').trim();
-        evalEl.innerHTML = `<span style="font-size:11px;color:var(--text-light);">あなたの回答：</span><span style="font-weight:500;"> ${userAnswer}</span><br><span style="font-size:clamp(14px,1.7vw,18px);color:var(--deep-blue);">${text}</span>`;
+        evalEl.innerHTML = `<span style="font-size:11px;color:var(--text-light);">記入者の回答：</span><span style="font-weight:500;"> ${userAnswer}</span><br><span style="font-size:clamp(14px,1.7vw,18px);color:var(--deep-blue);">${text}</span>`;
       }
     })
     .catch(() => {
       const evalEl = document.getElementById('qeval' + idx);
-      if (evalEl) evalEl.innerHTML = `<span style="font-size:11px;color:var(--text-light);">あなたの回答：</span><span style="font-weight:500;"> ${userAnswer}</span>`;
+      if (evalEl) evalEl.innerHTML = `<span style="font-size:11px;color:var(--text-light);">記入者の回答：</span><span style="font-weight:500;"> ${userAnswer}</span>`;
     });
   }
 }
@@ -2561,8 +2561,7 @@ function showAI(idx) {
     if (e.target === overlay) overlay.remove();
   });
 
-  const prompt = `以下の敬語の誤りを解説してください。\n【誤った表現】${qData.q}\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\n「△　惜しかったね。しっかり学んで次はがんばりましょう。」のような親しみやすい口調とボリュームで、なぜ間違いなのかを分かりやすく説明してください。`;
-
+const prompt = `敬語の採点をしてください。\n【問題の誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n記入者の回答が正しい表現と一致または同等であれば◎、惜しければ△、間違いまたは誤った表現と同じであれば✕を文頭に置いてください。その後、10文字程度の励ましを親しみやすい口調で一言だけ添えてください。他の説明は一切不要です。`;
   fetch('/ask', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
