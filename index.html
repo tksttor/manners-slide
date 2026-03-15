@@ -2493,7 +2493,7 @@ function submitQuiz(idx) {
 
 なぜ元の表現が間違いなのかを分かりやすく簡潔に説明してください。`;
 
-  fetch("/.netlify/functions/ask", {
+  fetch("/ask", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt })
