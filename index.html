@@ -42,13 +42,11 @@ html, body {
 
 #app {
   width:100%;
- height:100%;
- max-width:calc(100vh * 16 / 9);
- max-height:calc(100vw * 9 / 16);
- margin:auto;
- position:relative;
- overflow:hidden;
- background:var(--bg-light);
+  height:100%;
+  margin:auto;
+  position:relative;
+  overflow:hidden;
+  background:var(--bg-light);
 }
 
 .slide-wrapper {
@@ -71,14 +69,13 @@ html, body {
 }
 
 .h-slide {
-  width:100%;
- height:100%;
- flex-shrink:0;
- display:flex;
- align-items:center;
- justify-content:center;
- padding: 60px 24px 120px 24px;
- transition: transform var(--transition);
+  width:100%; height:100%;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 40px 48px 80px 48px;
+  transition: transform var(--transition);
 }
 
 .h-track {
@@ -90,13 +87,13 @@ html, body {
 
 .slide-content {
   width:100%;
- max-width:1200px;
- margin:0 auto;
- height:100%;
- display:flex;
- flex-direction:column;
- justify-content:center;
- gap:20px;
+  max-width:900px;
+  margin:0 auto;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:20px;
 }
 
 .card {
@@ -786,7 +783,6 @@ p, li {
  text-align:center;
  gap:50px;
  z-index:10;
-
  padding:0 24px 110px 24px;
  will-change:transform, top;
  transition: transform 1.4s cubic-bezier(0.22, 0.61, 0.36, 1),
@@ -999,7 +995,6 @@ p, li {
  flex-direction: column;
  justify-content: center;
  gap: clamp(10px,1.4vw,18px);
-
  border: 1.5px solid rgba(255,255,255,0.35);
 }
 .era-card.asuka { background: linear-gradient(135deg,rgba(192,57,43,0.18) 0%,rgba(231,76,60,0.08) 100%); }
@@ -2457,7 +2452,7 @@ function submitQuiz(idx) {
   `;
 
   if (userAnswer) {
-    const prompt = `以下の敬語練習問題で、受講者の回答を評価してください。\n【誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【受講者の回答】「${userAnswer}」\n◎○△✕のいずれかで評価し、受講者を褒めたり励ましたりしながら2〜3文の自然な日本語でフィードバックしてください。記号は文頭に置いてください。`;
+    const prompt = `以下の敬語練習問題で、あなたの回答を厳しめに評価してください。\n【誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【受講者の回答】「${userAnswer}」\n◎○△✕のいずれかで評価し、あなたを一言で褒めたり励ましたりしてください。記号は文頭に置いてください。`;
     fetch('/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2515,7 +2510,7 @@ function showAI(idx) {
     if (e.target === overlay) overlay.remove();
   });
 
-  const prompt = `以下の敬語練習問題を150文字以内で解説してください。\n【誤った表現】${qData.q}\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\nなぜ元の表現が間違いなのかを分かりやすく簡潔に説明してください。`;
+  const prompt = `以下の敬語練習問題を150文字以内であなたの回答とともに解説してください。\n【誤った表現】${qData.q}\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\n親しみやすい正しい日本語で優しく解説してね。`;
 
   fetch('/ask', {
     method: 'POST',
