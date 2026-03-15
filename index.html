@@ -2483,8 +2483,7 @@ function submitQuiz(idx) {
   `;
 
   if (userAnswer) {
-    const prompt = `以下の敬語練習問題で、記入者の回答を厳しめに採点してください。\n【誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n最初に◎○△✕のいずれかの記号だけを置き、続けて親しみやすい口調で短く励ましてください。全体で30文字以内にしてください。`;
-
+   const prompt = `敬語の採点をしてください。\n【問題の誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n記入者の回答が正しい表現と一致または同等であれば◎、惜しければ△、間違いまたは誤った表現と同じであれば✕を文頭に置いてください。その後、10文字程度の励ましを親しみやすい口調で一言だけ添えてください。他の説明は一切不要です。`;
     fetch('/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
