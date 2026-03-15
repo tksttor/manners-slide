@@ -2426,6 +2426,36 @@ function updateUI() {
 }
 
 
+// ========================================
+// ① questions配列（正解を全文に修正）
+// ========================================
+const questions = [
+  {num:'①', q:'「課長は何時に出れますか？」', reason:'ら抜き言葉', correct:'「課長は何時に出られますか？」'},
+  {num:'②', q:'「植木に水をあげましょう」', reason:'植物に「あげる」は本来不適切', correct:'「植木に水をやりましょう」'},
+  {num:'③', q:'「書類の方お持ちしました」', reason:'「方」は不要', correct:'「書類をお持ちしました」'},
+  {num:'④', q:'「書類を拝見してくださいましたか」', reason:'「拝見」は謙譲語', correct:'「書類をご覧くださいましたか」'},
+  {num:'⑤', q:'「うちの子におもちゃを買ってあげました」', reason:'自分の行為に「あげる」は不適切', correct:'「うちの子におもちゃを買ってやりました」'},
+  {num:'⑥', q:'「Ｂさんはおりますか？」', reason:'「おる」は謙譲語', correct:'「Bさんはいらっしゃいますか？」'},
+  {num:'⑦', q:'「どうぞお話してください」', reason:'送り仮名に注意', correct:'「どうぞお話しください」'},
+  {num:'⑧', q:'「パーティーには誰がまいりますか？」', reason:'「まいる」は謙譲語', correct:'「パーティーにはどなたがいらっしゃいますか？」'},
+  {num:'⑨', q:'「ここはＣさんの家でいらっしゃいますか？」', reason:'「いらっしゃる」は人に使う', correct:'「Cさんのお宅ですか？」'},
+  {num:'⑩', q:'「社内的にはこの方針でと決まりました」', reason:'「的」は不要', correct:'「社内ではこの方針に決まりました」'},
+  {num:'⑪', q:'「お名前頂戴できますか？」', reason:'名前は「もらう」ものではない', correct:'「お名前をお聞かせいただけますか」'},
+  {num:'⑫', q:'「お電話番号をいただけますか？」', reason:'番号も「もらう」ものではない', correct:'「お電話番号をお教えいただけますか」'},
+  {num:'⑬', q:'「昨夜は寝れましたか？」', reason:'ら抜き言葉', correct:'「昨夜は眠れましたか？」'},
+  {num:'⑭', q:'「絵を見させてください」', reason:'さ入れ言葉', correct:'「絵を見せてください」'},
+  {num:'⑮', q:'「お手洗いはあちらになります」', reason:'「なります」は変化を表す', correct:'「お手洗いはあちらでございます」'},
+  {num:'⑯', q:'「先生がおっしゃられました」', reason:'二重敬語', correct:'「先生がおっしゃいました」'},
+  {num:'⑰', q:'「社長が申されました」', reason:'「申す」は謙譲語', correct:'「社長がおっしゃいました」'},
+  {num:'⑱', q:'「Ｂさんがお帰りになられました」', reason:'二重敬語', correct:'「Bさんがお帰りになりました」'},
+  {num:'⑲', q:'「ご用件を(自社の)Ｃにお伝えします」', reason:'自社の人に「お」は不要', correct:'「ご用件をCに伝えます（申し伝えます）」'},
+  {num:'⑳', q:'「どうもすみませんでした」', reason:'「どうも」はカジュアル', correct:'「大変申し訳ございませんでした」'},
+];
+
+
+// ========================================
+// ② submitQuiz関数（1つだけ・重複なし）
+// ========================================
 function submitQuiz(idx) {
   const card = document.getElementById('qcard' + idx);
   const input = document.getElementById('qinput' + idx);
@@ -2453,7 +2483,7 @@ function submitQuiz(idx) {
   `;
 
   if (userAnswer) {
-    const prompt = `以下の敬語練習問題で、あなたの回答を厳しめに採点してください。\n【誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【あなたの回答】「${userAnswer}」\n◎○△✕で採点し、「△　惜しかったね。しっかり学んで次はがんばりましょう。」のような口調とボリュームで、親しみやすく励ましてください。記号は文頭に置いてください。`;
+    const prompt = `以下の敬語練習問題で、記入者の回答を厳しめに採点してください。\n【誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n最初に◎○△✕のいずれかの記号だけを置き、続けて親しみやすい口調で短く励ましてください。全体で30文字以内にしてください。`;
 
     fetch('/ask', {
       method: 'POST',
@@ -2475,11 +2505,14 @@ function submitQuiz(idx) {
   }
 }
 
+
+// ========================================
+// ③ showAI関数（ボトムシート・全幅・更新済みプロンプト）
+// ========================================
 function showAI(idx) {
   const qData = questions[idx - 1];
   if (!qData) return;
 
-  // オーバーレイ
   const overlay = document.createElement('div');
   overlay.id = 'aiModal';
   overlay.style.cssText = `
@@ -2488,10 +2521,9 @@ function showAI(idx) {
     display:flex;align-items:flex-end;justify-content:center;
   `;
 
-  // ボトムシート
   const sheet = document.createElement('div');
   sheet.style.cssText = `
-    width:100%;max-width:720px;
+    width:100%;
     background:#fff;
     border-radius:20px 20px 0 0;
     padding:20px 24px 40px;
@@ -2521,12 +2553,10 @@ function showAI(idx) {
   overlay.appendChild(sheet);
   document.body.appendChild(overlay);
 
-  // アニメーション
   requestAnimationFrame(() => {
     sheet.style.transform = 'translateY(0)';
   });
 
-  // 背景クリックで閉じる
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.remove();
   });
@@ -2548,29 +2578,6 @@ function showAI(idx) {
     if (content) content.innerHTML = `【誤りの理由】${qData.reason}<br>【正しい表現】${qData.correct}`;
   });
 }
-const questions = [
-  {num:'①', q:'「課長は何時に出れますか？」', reason:'ら抜き言葉', correct:'「課長は何時に出られますか？」'},
-  {num:'②', q:'「植木に水をあげましょう」', reason:'植物に「あげる」は本来不適切', correct:'「植木に水をやりましょう」'},
-  {num:'③', q:'「書類の方お持ちしました」', reason:'「方」は不要', correct:'「書類をお持ちしました」'},
-  {num:'④', q:'「書類を拝見してくださいましたか」', reason:'「拝見」は謙譲語', correct:'「書類をご覧くださいましたか」'},
-  {num:'⑤', q:'「うちの子におもちゃを買ってあげました」', reason:'自分の行為に「あげる」は不適切', correct:'「うちの子におもちゃを買ってやりました」'},
-  {num:'⑥', q:'「Ｂさんはおりますか？」', reason:'「おる」は謙譲語', correct:'「Bさんはいらっしゃいますか？」'},
-  {num:'⑦', q:'「どうぞお話してください」', reason:'送り仮名に注意', correct:'「どうぞお話しください」'},
-  {num:'⑧', q:'「パーティーには誰がまいりますか？」', reason:'「まいる」は謙譲語', correct:'「パーティーにはどなたがいらっしゃいますか？」'},
-  {num:'⑨', q:'「ここはＣさんの家でいらっしゃいますか？」', reason:'「いらっしゃる」は人に使う', correct:'「Cさんのお宅ですか？」'},
-  {num:'⑩', q:'「社内的にはこの方針でと決まりました」', reason:'「的」は不要', correct:'「社内ではこの方針に決まりました」'},
-  {num:'⑪', q:'「お名前頂戴できますか？」', reason:'名前は「もらう」ものではない', correct:'「お名前をお聞かせいただけますか」'},
-  {num:'⑫', q:'「お電話番号をいただけますか？」', reason:'番号も「もらう」ものではない', correct:'「お電話番号をお教えいただけますか」'},
-  {num:'⑬', q:'「昨夜は寝れましたか？」', reason:'ら抜き言葉', correct:'「昨夜は眠れましたか？」'},
-  {num:'⑭', q:'「絵を見させてください」', reason:'さ入れ言葉', correct:'「絵を見せてください」'},
-  {num:'⑮', q:'「お手洗いはあちらになります」', reason:'「なります」は変化を表す', correct:'「お手洗いはあちらでございます」'},
-  {num:'⑯', q:'「先生がおっしゃられました」', reason:'二重敬語', correct:'「先生がおっしゃいました」'},
-  {num:'⑰', q:'「社長が申されました」', reason:'「申す」は謙譲語', correct:'「社長がおっしゃいました」'},
-  {num:'⑱', q:'「Ｂさんがお帰りになられました」', reason:'二重敬語', correct:'「Bさんがお帰りになりました」'},
-  {num:'⑲', q:'「ご用件を(自社の)Ｃにお伝えします」', reason:'自社の人に「お」は不要', correct:'「ご用件をCに伝えます（申し伝えます）」'},
-  {num:'⑳', q:'「どうもすみませんでした」', reason:'「どうも」はカジュアル', correct:'「大変申し訳ございませんでした」'},
-];
-
 function jumpToQuiz(slideIdx) {
   const sec9Idx = sections.findIndex(s => s.hasQuiz);
   if (sec9Idx < 0) return;
