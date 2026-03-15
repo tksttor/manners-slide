@@ -51,6 +51,7 @@ export async function onRequestPost(context) {
         generationConfig: {
           temperature: 0.2,
           maxOutputTokens: 500,
+          thinkingConfig: { thinkingBudget: 0 },
         },
       }),
     });
