@@ -46,7 +46,7 @@ export async function onRequestPost(context) {
         'X-Title': 'Manners Slide',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp:free',
+        model: 'openrouter/free',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt },
