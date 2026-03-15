@@ -2475,8 +2475,8 @@ function submitQuiz(idx) {
     <div id="qai${idx}" style="display:none;width:100%;box-sizing:border-box;background:#f0f8ff;border-radius:10px;padding:10px 14px;font-size:clamp(13px,1.5vw,16px);color:var(--text-dark);line-height:1.6;text-align:left;"></div>
   `;
 
-  if (userAnswer) {
-    const prompt = `敬語の採点をしてください。必ず日本語のみで答えてください。\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n採点基準：\n◎：正しい表現と完全一致または同等\n○：敬語として正しいが表現が少し違う\n△：敬語を使おうとしているが重要な部分が間違い\n✕：敬語になっていない・方言・ら抜き言葉・問題文と同じ・意味が通じない\n記号1文字と20文字以内の一言だけ返してください。それ以外は絶対に書かないでください。例：✕ 惜しい！敬語を意識してもう一度挑戦！`;
+ if (userAnswer) {
+    const prompt = `敬語の採点をしてください。必ず日本語のみで答えてください。\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n【重要】以下のいずれか1つでも当てはまれば、他の条件を一切考慮せず即✕にしてください：\n- ら抜き言葉が含まれている\n- 方言が含まれている\n- 口語・タメ口が含まれている\n- 問題文と同じ表現\n- 敬語になっていない\n上記に該当しない場合のみ：◎（正しい表現と完全一致または同等）・○（敬語として正しいが表現が少し違う）・△（敬語を使おうとしているが重要な部分が間違い）で採点してください。\n記号1文字と20文字以内の一言だけ返してください。それ以外は絶対に書かないでください。例：✕ 惜しい！敬語を意識してもう一度挑戦！`;
 
     fetch('/ask', {
       method: 'POST',
@@ -2561,8 +2561,34 @@ function showAI(idx) {
     if (e.target === overlay) overlay.remove();
   });
 
-  const prompt = `以下の敬語の誤りを解説してください。必ず日本語のみで答えてください。\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\n${userAnswer ? `【記入者の回答】「${userAnswer}」\n` : ''}${evalTone}口調で、以下の3項目をそれぞれ1文、合計3行で返してください。それ以外は絶対に書かないでください。\n📌 誤りの種類：（ら抜き言葉・二重敬語など種類を一言で）\n❓ なぜ間違い？：（理由を一文で）\n💡 正しく使うコツ：（覚え方や使い方のコツを一文で）`;
+  const prompt = userAnswer
+    ? `以下の敬語の誤りを解説してください。必ず日本語のみで答えてください。\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\n【記入者の回答】「${userAnswer}」\n${evalTone}口調で、以下の3項目をそれぞれ1〜2文、合計3行で返してください。それ以外は絶対に書かないでください。\n📌 何が問題？：（誤りの種類と具体的な説明を1〜2文で）\n💬 あなたの回答について：（記入者の回答がなぜ合っているまたは間違いなのかを1〜2文で）\n💡 正しく使うコツ：（覚え方や使い方のコツを1〜2文で）`
+    : `以下の敬語の誤りを解説してください。必ず日本語のみで答えてください。\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\n親しみやすい口調で、以下の2項目をそれぞれ1〜2文、合計2行で返してください。それ以外は絶対に書かないでください。\n📌 何が問題？：（誤りの種類と具体的な説明を1〜2文で）\n💡 正しく使うコツ：（覚え方や使い方のコツを1〜2文で）`;
 
+  fetch('/ask', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt })
+  })
+  .then(r => r.json())
+  .then(data => {
+    const content = document.getElementById('aiModalContent');
+    if (content) {
+      const lines = (data.text || '').trim().split('\n').filter(l => l.trim());
+      content.innerHTML = lines.map(line => {
+        return `<div style="margin-bottom:12px;padding:8px 12px;border-radius:8px;background:var(--bg-light);font-size:clamp(13px,1.5vw,17px);line-height:1.7;color:var(--text-dark);">${line}</div>`;
+      }).join('');
+    }
+  })
+  .catch(() => {
+    const content = document.getElementById('aiModalContent');
+    if (content) content.innerHTML = `
+      <div style="margin-bottom:12px;padding:8px 12px;border-radius:8px;background:var(--bg-light);">📌 何が問題？：${qData.reason}</div>
+      ${userAnswer ? `<div style="margin-bottom:12px;padding:8px 12px;border-radius:8px;background:var(--bg-light);">💬 あなたの回答について：回答を確認してください</div>` : ''}
+      <div style="padding:8px 12px;border-radius:8px;background:var(--bg-light);">💡 正しく使うコツ：${qData.correct}を覚えておきましょう</div>
+    `;
+  });
+}
   fetch('/ask', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
