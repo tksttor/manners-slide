@@ -2433,45 +2433,110 @@ function updateUI() {
 function submitQuiz(idx) {
   const card = document.getElementById('qcard' + idx);
   const input = document.getElementById('qinput' + idx);
-  const aiBox = document.getElementById('qai' + idx);
-  if (!card) return;
-  const userAnswer = input ? input.value.trim() : '';
-  card.classList.add('flipped');
-  sec9Flipped = true;
-  // 受講者の回答を裏面に表示
-  const answerDisplay = document.getElementById('qanswer' + idx);
-  if (answerDisplay) {
-    if (userAnswer) {
-      answerDisplay.innerHTML = '<span style="font-size:11px;color:var(--text-light);">あなたの回答：</span><br><span style="font-size:clamp(14px,1.7vw,18px);color:var(--deep-blue);font-weight:500;">' + userAnswer + '</span>';
-    } else {
-      answerDisplay.style.display = 'none';
-    }
-  }
-  if (!aiBox) return;
-  aiBox.innerHTML = '<span style="color:var(--text-light);font-size:13px;">🤖 AIが解説中...</span>';
+  const back = document.getElementById('qback' + idx);
+  if (!card || !back) return;
 
-  const questions = [
-    {num:"①",q:"「課長は何時に出れますか？」",reason:"ら抜き言葉",correct:"「出られますか」"},
-    {num:"②",q:"「植木に水をあげましょう」",reason:"植物に「あげる」は本来不適切",correct:"「やりましょう」"},
-    {num:"③",q:"「書類の方お持ちしました」",reason:"「方」は不要",correct:"「書類をお持ちしました」"},
-    {num:"④",q:"「書類を拝見してくださいましたか」",reason:"「拝見」は謙譲語",correct:"「書類をご覧くださいましたか」"},
-    {num:"⑤",q:"「うちの子におもちゃを買ってあげました」",reason:"自分の行為に「あげる」は不適切",correct:"「買ってやりました」"},
-    {num:"⑥",q:"「Ｂさんはおりますか？」",reason:"「おる」は謙譲語",correct:"「Bさんはいらっしゃいますか？」"},
-    {num:"⑦",q:"「どうぞお話してください」",reason:"送り仮名に注意",correct:"「お話しください」"},
-    {num:"⑧",q:"「パーティーには誰がまいりますか？」",reason:"「まいる」は謙譲語",correct:"「どなたがいらっしゃいますか？」"},
-    {num:"⑨",q:"「ここはＣさんの家でいらっしゃいますか？」",reason:"「いらっしゃる」は人に使う",correct:"「Cさんのお宅ですか？」"},
-    {num:"⑩",q:"「社内的にはこの方針でと決まりました」",reason:"「的」は不要",correct:"「社内ではこの方針に決まりました」"},
-    {num:"⑪",q:"「お名前頂戴できますか？」",reason:"名前は「もらう」ものではない",correct:"「お名前をお聞かせいただけますか」"},
-    {num:"⑫",q:"「お電話番号をいただけますか？」",reason:"番号も「もらう」ものではない",correct:"「お電話番号をお教えいただけますか」"},
-    {num:"⑬",q:"「昨夜は寝れましたか？」",reason:"ら抜き言葉",correct:"「昨夜は眠れましたか？」"},
-    {num:"⑭",q:"「絵を見させてください」",reason:"さ入れ言葉",correct:"「絵を見せてください」"},
-    {num:"⑮",q:"「お手洗いはあちらになります」",reason:"「なります」は変化を表す",correct:"「お手洗いはあちらでございます」"},
-    {num:"⑯",q:"「先生がおっしゃられました」",reason:"二重敬語",correct:"「先生がおっしゃいました」"},
-    {num:"⑰",q:"「社長が申されました」",reason:"「申す」は謙譲語",correct:"「社長がおっしゃいました」"},
-    {num:"⑱",q:"「Ｂさんがお帰りになられました」",reason:"二重敬語",correct:"「Bさんがお帰りになりました」"},
-    {num:"⑲",q:"「ご用件を(自社の)Ｃにお伝えします」",reason:"自社の人に「お」は不要",correct:"「ご用件をCに伝えます（申し伝えます）」"},
-    {num:"⑳",q:"「どうもすみませんでした」",reason:"「どうも」はカジュアル",correct:"「大変申し訳ございませんでした」"}
-  ];
+  const userAnswer = input ? input.value.trim() : '';
+  const qData = questions[idx - 1];
+  if (!qData) return;
+
+  card.classList.add('flipped');
+  sec9Flipped = true;  // ← 元のまま残す
+
+  back.innerHTML = `
+    <p style="font-size:clamp(13px,1.5vw,17px);color:#27ae60;font-weight:700;margin:0 0 4px;">ANSWER ${qData.num}</p>
+    <p style="font-size:clamp(14px,1.6vw,18px);color:var(--text-light);margin:0 0 6px;text-decoration:line-through;">❌ ${qData.q}</p>
+    <p style="font-size:clamp(18px,2.2vw,26px);font-weight:700;color:var(--deep-blue);background:var(--bg-light);padding:8px 16px;border-radius:10px;border-left:5px solid #27ae60;margin:0 0 10px;width:100%;box-sizing:border-box;">✅ ${qData.correct}</p>
+    <div id="qeval${idx}" style="width:100%;box-sizing:border-box;background:var(--accent-yellow-light);border-radius:8px;padding:8px 14px;font-size:clamp(14px,1.7vw,18px);margin-bottom:10px;border-left:4px solid var(--accent-yellow);min-height:36px;">
+      ${userAnswer
+        ? `<span style="font-size:11px;color:var(--text-light);">あなたの回答：</span><span style="font-weight:500;"> ${userAnswer}</span><br><span style="color:var(--text-light);font-size:12px;">評価中…</span>`
+        : `<span style="color:var(--text-light);font-weight:600;">未回答</span>`}
+    </div>
+    <button id="qaibtn${idx}" onclick="showAI(${idx})" style="padding:7px 20px;border-radius:10px;border:2px solid var(--main-cyan);background:#fff;color:var(--main-cyan);font-size:clamp(13px,1.5vw,16px);font-weight:700;cursor:pointer;transition:all 0.2s;margin-bottom:8px;" onmouseover="this.style.background='var(--main-cyan)';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='var(--main-cyan)'">🤖 AI解説を見る</button>
+    <div id="qai${idx}" style="display:none;width:100%;box-sizing:border-box;background:#f0f8ff;border-radius:10px;padding:10px 14px;font-size:clamp(13px,1.5vw,16px);color:var(--text-dark);line-height:1.6;text-align:left;"></div>
+  `;
+
+  if (userAnswer) {
+    const prompt = `日本語の敬語・言葉遣いの練習問題です。受講者の回答を◎○△✕の1文字で評価し、理由を15文字以内で答えてください。必ず「◎ 理由」のように1行で返してください。\n【誤った表現】${qData.q}\n【正しい表現】${qData.correct}\n【受講者の回答】「${userAnswer}」`;
+
+    fetch('/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    })
+    .then(r => r.json())
+    .then(data => {
+      const evalEl = document.getElementById('qeval' + idx);
+      if (evalEl) {
+        const text = (data.text || '').trim();
+        evalEl.innerHTML = `<span style="font-size:11px;color:var(--text-light);">あなたの回答：</span><span style="font-weight:500;"> ${userAnswer}</span><br><span style="font-size:clamp(16px,2vw,22px);font-weight:700;color:var(--deep-blue);">${text}</span>`;
+      }
+    })
+    .catch(() => {
+      const evalEl = document.getElementById('qeval' + idx);
+      if (evalEl) evalEl.innerHTML = `<span style="font-size:11px;color:var(--text-light);">あなたの回答：</span><span style="font-weight:500;"> ${userAnswer}</span>`;
+    });
+  }
+}
+function showAI(idx) {
+  const btn = document.getElementById('qaibtn' + idx);
+  const aiDiv = document.getElementById('qai' + idx);
+  if (!aiDiv) return;
+
+  // 読み込み済みならトグル表示
+  if (aiDiv.dataset.loaded === 'true') {
+    aiDiv.style.display = aiDiv.style.display === 'none' ? 'block' : 'none';
+    if (btn) btn.textContent = aiDiv.style.display === 'none' ? '🤖 AI解説を見る' : '🤖 AI解説を閉じる';
+    return;
+  }
+
+  aiDiv.style.display = 'block';
+  aiDiv.innerHTML = '<span style="color:var(--text-light);font-size:13px;">読み込み中…</span>';
+  if (btn) btn.disabled = true;
+
+  const qData = questions[idx - 1];
+  const prompt = `日本語の敬語・言葉遣いの練習問題を150文字以内で解説してください。\n【誤った表現】${qData.q}\n【誤りのポイント】${qData.reason}\n【正しい表現】${qData.correct}\nなぜ元の表現が間違いなのかを分かりやすく簡潔に説明してください。`;
+
+  fetch('/ask', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt })
+  })
+  .then(r => r.json())
+  .then(data => {
+    const text = data.text || '解説を取得できませんでした。';
+    aiDiv.innerHTML = '<span style="font-size:12px;color:var(--main-cyan);font-weight:700;">🤖 AI解説</span><br>' + text.replace(/\n/g, '<br>');
+    aiDiv.dataset.loaded = 'true';
+    if (btn) { btn.disabled = false; btn.textContent = '🤖 AI解説を閉じる'; }
+  })
+  .catch(() => {
+    aiDiv.innerHTML = `<span style="font-size:12px;color:var(--main-cyan);font-weight:700;">📝 ポイント</span><br><span style="color:var(--text-dark);">【誤りの理由】${qData.reason}<br>【正しい表現】${qData.correct}</span>`;
+    aiDiv.dataset.loaded = 'true';
+    if (btn) { btn.disabled = false; btn.textContent = '🤖 AI解説を閉じる'; }
+  });
+}
+const questions = [
+  {num:'①', q:'「課長は何時に出れますか？」', reason:'ら抜き言葉', correct:'「課長は何時に出られますか？」'},
+  {num:'②', q:'「植木に水をあげましょう」', reason:'植物に「あげる」は本来不適切', correct:'「植木に水をやりましょう」'},
+  {num:'③', q:'「書類の方お持ちしました」', reason:'「方」は不要', correct:'「書類をお持ちしました」'},
+  {num:'④', q:'「書類を拝見してくださいましたか」', reason:'「拝見」は謙譲語', correct:'「書類をご覧くださいましたか」'},
+  {num:'⑤', q:'「うちの子におもちゃを買ってあげました」', reason:'自分の行為に「あげる」は不適切', correct:'「うちの子におもちゃを買ってやりました」'},
+  {num:'⑥', q:'「Ｂさんはおりますか？」', reason:'「おる」は謙譲語', correct:'「Bさんはいらっしゃいますか？」'},
+  {num:'⑦', q:'「どうぞお話してください」', reason:'送り仮名に注意', correct:'「どうぞお話しください」'},
+  {num:'⑧', q:'「パーティーには誰がまいりますか？」', reason:'「まいる」は謙譲語', correct:'「パーティーにはどなたがいらっしゃいますか？」'},
+  {num:'⑨', q:'「ここはＣさんの家でいらっしゃいますか？」', reason:'「いらっしゃる」は人に使う', correct:'「Cさんのお宅ですか？」'},
+  {num:'⑩', q:'「社内的にはこの方針でと決まりました」', reason:'「的」は不要', correct:'「社内ではこの方針に決まりました」'},
+  {num:'⑪', q:'「お名前頂戴できますか？」', reason:'名前は「もらう」ものではない', correct:'「お名前をお聞かせいただけますか」'},
+  {num:'⑫', q:'「お電話番号をいただけますか？」', reason:'番号も「もらう」ものではない', correct:'「お電話番号をお教えいただけますか」'},
+  {num:'⑬', q:'「昨夜は寝れましたか？」', reason:'ら抜き言葉', correct:'「昨夜は眠れましたか？」'},
+  {num:'⑭', q:'「絵を見させてください」', reason:'さ入れ言葉', correct:'「絵を見せてください」'},
+  {num:'⑮', q:'「お手洗いはあちらになります」', reason:'「なります」は変化を表す', correct:'「お手洗いはあちらでございます」'},
+  {num:'⑯', q:'「先生がおっしゃられました」', reason:'二重敬語', correct:'「先生がおっしゃいました」'},
+  {num:'⑰', q:'「社長が申されました」', reason:'「申す」は謙譲語', correct:'「社長がおっしゃいました」'},
+  {num:'⑱', q:'「Ｂさんがお帰りになられました」', reason:'二重敬語', correct:'「Bさんがお帰りになりました」'},
+  {num:'⑲', q:'「ご用件を(自社の)Ｃにお伝えします」', reason:'自社の人に「お」は不要', correct:'「ご用件をCに伝えます（申し伝えます）」'},
+  {num:'⑳', q:'「どうもすみませんでした」', reason:'「どうも」はカジュアル', correct:'「大変申し訳ございませんでした」'},
+];
   const qData = questions[idx - 1];
   if (!qData) return;
 
@@ -2484,7 +2549,7 @@ function submitQuiz(idx) {
 
 【受講者の回答】「${userAnswer}」
 
-受講者の回答が正しいか評価し（◎・○・△・✕で）、なぜ元の表現が間違いなのかを分かりやすく簡潔に説明してください。`
+あなたの回答が正しいか評価し（◎・○・△・✕で）、なぜあなたの回答が間違いなのかを分かりやすく簡潔に説明してください。`
     : `日本語の敬語・言葉遣いの練習問題です。以下を150文字以内で解説してください。
 
 【誤った表現】${qData.q}
