@@ -2589,30 +2589,6 @@ function showAI(idx) {
     `;
   });
 }
-  fetch('/ask', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt })
-  })
-  .then(r => r.json())
-  .then(data => {
-    const content = document.getElementById('aiModalContent');
-    if (content) {
-      const lines = (data.text || '').trim().split('\n').filter(l => l.trim());
-      content.innerHTML = lines.map(line => {
-        return `<div style="margin-bottom:12px;padding:8px 12px;border-radius:8px;background:var(--bg-light);font-size:clamp(13px,1.5vw,17px);line-height:1.7;color:var(--text-dark);">${line}</div>`;
-      }).join('');
-    }
-  })
-  .catch(() => {
-    const content = document.getElementById('aiModalContent');
-    if (content) content.innerHTML = `
-      <div style="margin-bottom:12px;padding:8px 12px;border-radius:8px;background:var(--bg-light);">📌 誤りの種類：${qData.reason}</div>
-      <div style="margin-bottom:12px;padding:8px 12px;border-radius:8px;background:var(--bg-light);">❓ なぜ間違い？：誤りのポイントを確認してください</div>
-      <div style="padding:8px 12px;border-radius:8px;background:var(--bg-light);">💡 正しく使うコツ：${qData.correct}を覚えておきましょう</div>
-    `;
-  });
-}
 
 function jumpToQuiz(slideIdx) {
   const sec9Idx = sections.findIndex(s => s.hasQuiz);
