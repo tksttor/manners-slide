@@ -9,10 +9,10 @@ export async function onRequestPost(context) {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const apiKey = context.env.GEMINI_API_KEY;
+  const apiKey = context.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return Response.json(
-      { text: 'エラー: GEMINI_API_KEYが未設定です' },
+      { text: 'エラー: OPENROUTER_API_KEYが未設定です' },
       { status: 500, headers: corsHeaders }
     );
   }
@@ -37,27 +37,28 @@ export async function onRequestPost(context) {
   }
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
-    const res = await fetch(url, {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://manners-slide.pages.dev',
+        'X-Title': 'Manners Slide',
+      },
       body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: systemPrompt }],
-        },
-        contents: [
-          { role: 'user', parts: [{ text: prompt }] },
+        model: 'google/gemini-2.0-flash-exp:free',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt },
         ],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 300,
-        },
+        max_tokens: 300,
+        temperature: 0.2,
       }),
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error('Gemini API error:', res.status, errText);
+      console.error('OpenRouter API error:', res.status, errText);
       return Response.json(
         { text: `エラー: AI APIの呼び出しに失敗しました (${res.status})` },
         { status: 502, headers: corsHeaders }
@@ -65,7 +66,7 @@ export async function onRequestPost(context) {
     }
 
     const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '解説を取得できませんでした。';
+    const text = data.choices?.[0]?.message?.content || '解説を取得できませんでした。';
     return Response.json({ text }, { headers: corsHeaders });
 
   } catch (err) {
