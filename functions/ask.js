@@ -1,19 +1,4 @@
-export async function onRequestPost(context) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
-
-  if (context.request.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const apiKey = context.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return Response.json(
-      { text: 'エラー: GEMINI_API_KEYが未設定です' },
-      { status: 500, headers: corsHeaders }const questions = [
+const questions = [
   {num:'①', q:'「課長は何時に出れますか？」', reason:'「出る」の可能形は「出られる」が正しい。「出れる」はら抜き言葉でビジネスシーンでは不適切な表現。', correct:'「課長は何時に出られますか？」'},
   {num:'②', q:'「植木に水をあげましょう」', reason:'「あげる」は相手への敬意を含む表現のため、植物など生き物でないものには使わない。植物への行為には「やる」が正しい。', correct:'「植木に水をやりましょう」'},
   {num:'③', q:'「書類の方お持ちしました」', reason:'「〜の方」は方向や選択肢を示す言葉であり、物の代わりに使うのは誤り。ぼかし言葉として使うのはビジネスでは不適切。「お〜いたす」はセットで一つの謙譲表現のため、「お持ちいたしました」も正しい丁寧な表現。', correct:'「書類をお持ちしました」（「書類をお持ちいたしました」も正しい表現）'},
@@ -517,66 +502,3 @@ function jumpToSection(sIdx) {
 }
 
 buildSlides();
-    );
-  }
-
-  let prompt, systemPrompt;
-  try {
-    const body = await context.request.json();
-    prompt = body.prompt;
-    systemPrompt = body.systemPrompt || 'あなたは日本語の敬語・言葉遣いの専門家です。指示された形式を厳守して回答してください。日本語のみで答えてください。';
-  } catch {
-    return Response.json(
-      { text: 'エラー: リクエストの形式が正しくありません' },
-      { status: 400, headers: corsHeaders }
-    );
-  }
-
-  if (!prompt) {
-    return Response.json(
-      { text: 'エラー: promptが空です' },
-      { status: 400, headers: corsHeaders }
-    );
-  }
-
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: systemPrompt }],
-        },
-        contents: [
-          { role: 'user', parts: [{ text: prompt }] },
-        ],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 500,
-          thinkingConfig: { thinkingBudget: 0 },
-        },
-      }),
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('Gemini API error:', res.status, errText);
-      return Response.json(
-        { text: `エラー: AI APIの呼び出しに失敗しました (${res.status})` },
-        { status: 502, headers: corsHeaders }
-      );
-    }
-
-    const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '解説を取得できませんでした。';
-    return Response.json({ text }, { headers: corsHeaders });
-
-  } catch (err) {
-    console.error('Fetch error:', err);
-    return Response.json(
-      { text: 'エラー: ネットワークエラーが発生しました' },
-      { status: 503, headers: corsHeaders }
-    );
-  }
-}
