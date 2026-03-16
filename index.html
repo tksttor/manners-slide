@@ -7,97 +7,50 @@
 <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
   font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
-  background: #fff;
-  color: #000;
+  background: #fff; color: #000;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: flex; flex-direction: column; align-items: center;
   padding: 24px 16px 40px;
 }
-
 header {
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  width: 100%; max-width: 800px;
+  display: flex; align-items: center; justify-content: space-between;
   border-bottom: 2px solid #000;
-  padding-bottom: 12px;
-  margin-bottom: 16px;
+  padding-bottom: 12px; margin-bottom: 16px;
 }
-
-header h1 {
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-}
-
+header h1 { font-size: 14px; font-weight: 500; letter-spacing: 0.1em; }
 .ボタン群 { display: flex; gap: 8px; }
-
 .スクロールボタン {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #000;
-  background: #fff;
-  cursor: pointer;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 36px; height: 36px;
+  border: 1px solid #000; background: #fff;
+  cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
   transition: background 0.1s, transform 0.08s;
 }
 .スクロールボタン:hover { background: #eee; }
 .スクロールボタン:active { transform: scale(0.93); background: #ddd; }
-
 #ビューワー {
-  width: 100%;
-  max-width: 800px;
-  height: 76vh;
-  overflow-y: auto;
-  border: 1px solid #000;
-  padding: 32px 40px;
-  scroll-behavior: smooth;
-  background: #fff;
+  width: 100%; max-width: 800px; height: 76vh;
+  overflow-y: auto; border: 1px solid #000;
+  padding: 32px 40px; scroll-behavior: smooth; background: #fff;
 }
 #ビューワー::-webkit-scrollbar { width: 4px; }
 #ビューワー::-webkit-scrollbar-thumb { background: #999; }
-
 #読込中 {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 12px;
-  color: #555;
-  font-size: 13px;
-  letter-spacing: 0.1em;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; gap: 12px;
+  color: #555; font-size: 13px; letter-spacing: 0.1em;
 }
 .くるくる {
   width: 24px; height: 24px;
-  border: 2px solid #ccc;
-  border-top-color: #000;
-  border-radius: 50%;
-  animation: 回転 0.8s linear infinite;
+  border: 2px solid #ccc; border-top-color: #000;
+  border-radius: 50%; animation: 回転 0.8s linear infinite;
 }
 @keyframes 回転 { to { transform: rotate(360deg); } }
-
-#本文 {
-  display: none;
-  font-size: 14.5px;
-  line-height: 2;
-  color: #000;
-}
-#本文 h1 {
-  font-size: 20px; font-weight: 700;
-  margin: 28px 0 12px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid #000;
-}
+#本文 { display: none; font-size: 14.5px; line-height: 2; color: #000; }
+#本文 h1 { font-size: 20px; font-weight: 700; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #000; }
 #本文 h2 { font-size: 16px; font-weight: 700; margin: 20px 0 8px; }
 #本文 h3 { font-size: 14px; font-weight: 700; margin: 16px 0 6px; }
 #本文 p  { margin-bottom: 10px; }
@@ -107,29 +60,21 @@ header h1 {
 #本文 ul, #本文 ol { margin: 6px 0 10px 22px; }
 #本文 li { margin-bottom: 4px; }
 #本文 img { max-width: 100%; margin: 10px 0; }
-
 footer {
-  width: 100%;
-  max-width: 800px;
-  margin-top: 10px;
-  font-size: 11px;
-  color: #888;
-  display: flex;
-  justify-content: space-between;
-  letter-spacing: 0.06em;
+  width: 100%; max-width: 800px; margin-top: 10px;
+  font-size: 11px; color: #888;
+  display: flex; justify-content: space-between; letter-spacing: 0.06em;
 }
 </style>
 </head>
 <body>
-
 <header>
   <h1>バーチャル講座　２０２６年３月１９日</h1>
   <div class="ボタン群">
-    <button class="スクロールボタン" id="上へ" title="３行上へ">▲</button>
-    <button class="スクロールボタン" id="下へ" title="３行下へ">▼</button>
+    <button class="スクロールボタン" id="上へ">▲</button>
+    <button class="スクロールボタン" id="下へ">▼</button>
   </div>
 </header>
-
 <div id="ビューワー">
   <div id="読込中">
     <div class="くるくる"></div>
@@ -137,40 +82,33 @@ footer {
   </div>
   <div id="本文"></div>
 </div>
-
 <footer>
   <span>▲ ▼ ボタン：１クリック＝３行スクロール</span>
   <span id="位置"></span>
 </footer>
-
 <script>
 const ビューワー = document.getElementById("ビューワー");
 const 読込中   = document.getElementById("読込中");
 const 本文     = document.getElementById("本文");
 const 位置表示 = document.getElementById("位置");
 
-function 行高() {
-  return parseFloat(getComputedStyle(本文).fontSize || "14.5") * 2;
-}
+function 行高() { return parseFloat(getComputedStyle(本文).fontSize || "14.5") * 2; }
 function スクロール(方向) {
   ビューワー.scrollBy({ top: 方向 * 3 * 行高(), behavior: "smooth" });
   setTimeout(位置更新, 320);
 }
 function 位置更新() {
   const 行 = Math.round(ビューワー.scrollTop / 行高()) + 1;
-  位置表示.textContent = ビューワー.scrollHeight > ビューワー.clientHeight
-    ? 行 + " 行目付近" : "";
+  位置表示.textContent = ビューワー.scrollHeight > ビューワー.clientHeight ? 行 + " 行目付近" : "";
 }
-
 document.getElementById("上へ").addEventListener("click", () => スクロール(-1));
 document.getElementById("下へ").addEventListener("click", () => スクロール(1));
 ビューワー.addEventListener("scroll", 位置更新);
 
-const ファイル = "./images/%E3%83%90%E3%83%BC%E3%83%81%E3%83%A3%E3%83%AB%E8%AC%9B%E5%BA%A7%EF%BC%92%EF%BC%90%EF%BC%92%EF%BC%96%E5%B9%B4%EF%BC%93%E6%9C%88%EF%BC%91%EF%BC%99%E6%97%A5.docx";
-
-fetch(ファイル)
+// ファイル名を英数字に変更済み（lecture.docx）
+fetch("./images/lecture.docx")
   .then(r => {
-    if (!r.ok) throw new Error("HTTP " + r.status + "  — ファイルパス: " + r.url);
+    if (!r.ok) throw new Error("HTTP " + r.status);
     return r.arrayBuffer();
   })
   .then(buf => mammoth.convertToHtml({ arrayBuffer: buf }))
