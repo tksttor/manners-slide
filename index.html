@@ -166,7 +166,8 @@ document.getElementById("上へ").addEventListener("click", () => スクロー�
 document.getElementById("下へ").addEventListener("click", () => スクロール(1));
 ビューワー.addEventListener("scroll", 位置更新);
 
-const ファイル = "./images/%E3%83%90%E3%83%BC%E3%83%81%E3%83%A3%E3%83%AB%E8%AC%9B%E5%BA%A7%EF%BC%92%EF%BC%90%EF%BC%92%EF%BC%96%E5%B9%B4%EF%BC%93%E6%9C%88%EF%BC%91%EF%BC%99%E6%97%A5.docx";
+// raw.githubusercontent.com から直接取得（mainブランチにimagesフォルダがないため）
+const ファイル = "https://raw.githubusercontent.com/tksttor/manners-slide/12bdff6565f34f127e850579c8d9d599fcf381f6/images/%E3%83%90%E3%83%BC%E3%83%81%E3%83%A3%E3%83%AB%E8%AC%9B%E5%BA%A7%EF%BC%92%EF%BC%90%EF%BC%92%EF%BC%96%E5%B9%B4%EF%BC%93%E6%9C%88%EF%BC%91%EF%BC%99%E6%97%A5.docx";
 
 fetch(ファイル)
   .then(r => {
