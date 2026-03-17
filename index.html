@@ -5,46 +5,73 @@
   <title>PDFスライド同期ビューア</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
     body { font-family: sans-serif; background: #fff; color: #000; text-align: center; }
     #pdf-canvas { border: 1px solid #000; margin: 20px 0; }
     .nav-btn { margin: 8px; padding: 8px 18px; font-size: 16px; }
     #page-info { font-size: 16px; margin: 0 12px; }
+    #login-form { margin: 20px; }
+    #login-form input { margin: 4px; padding: 6px; font-size: 14px; }
+    #login-form button { margin: 4px; padding: 6px 16px; font-size: 14px; }
+    #presenter-controls { display: none; }
   </style>
 </head>
 <body>
   <h1>PDFスライド同期ビューア</h1>
-  <button class="nav-btn" id="prev">前へ</button>
-  <span id="page-info"></span>
-  <button class="nav-btn" id="next">次へ</button>
+
+  <!-- 発表者ログインフォーム -->
+  <div id="login-form">
+    <input type="email" id="email" placeholder="メールアドレス" />
+    <input type="password" id="password" placeholder="パスワード" />
+    <button onclick="login()">ログイン</button>
+  </div>
+
+  <!-- 発表者コントロール（ログイン後に表示） -->
+  <div id="presenter-controls">
+    <span id="user-info"></span>
+    <button onclick="logout()" style="margin-left:12px;">ログアウト</button>
+    <br><br>
+    <button class="nav-btn" id="prev">前へ</button>
+    <span id="page-info"></span>
+    <button class="nav-btn" id="next">次へ</button>
+  </div>
+
+  <!-- 視聴者用ページ表示 -->
+  <div id="viewer-controls" style="display:none;">
+    <span id="page-info-viewer"></span>
+  </div>
+
   <br>
   <canvas id="pdf-canvas"></canvas>
   <div id="status"></div>
+
   <script>
-    // === Firebase設定ここから ===
     const firebaseConfig = {
-      apiKey: "ここにあなたの値",
-      authDomain: "ここにあなたの値",
-      databaseURL: "ここにあなたの値",
-      projectId: "ここにあなたの値",
-      storageBucket: "ここにあなたの値",
-      messagingSenderId: "ここにあなたの値",
-      appId: "ここにあなたの値"
+      apiKey: "AIzaSyBIQLHl5nmkmEfEUnRBrGSGAoYK6r9FIhk",
+      authDomain: "manners-slide.firebaseapp.com",
+      databaseURL: "https://manners-slide-default-rtdb.firebaseio.com",
+      projectId: "manners-slide",
+      storageBucket: "manners-slide.firebasestorage.app",
+      messagingSenderId: "490855959579",
+      appId: "1:490855959579:web:c53a03f3d105a510b4bcbe"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const auth = firebase.auth();
     const pageRef = db.ref("pdfPage");
-    // === Firebase設定ここまで ===
 
-    const url = "./images/lecture.pdf";
+    const url = "./lecture.pdf";
     let pdfDoc = null, pageNum = 1, totalPages = 1;
+    let isPresenter = false;
 
     const canvas = document.getElementById('pdf-canvas');
     const ctx = canvas.getContext('2d');
-    const pageInfo = document.getElementById('page-info');
     const statusDiv = document.getElementById('status');
 
+    // PDF読み込み
     pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
       pdfDoc = pdfDoc_;
       totalPages = pdfDoc.numPages;
@@ -63,7 +90,9 @@
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         page.render({ canvasContext: ctx, viewport: viewport });
-        pageInfo.textContent = `ページ ${num} / ${pdfDoc.numPages}`;
+        const info = `ページ ${num} / ${totalPages}`;
+        document.getElementById('page-info').textContent = info;
+        document.getElementById('page-info-viewer').textContent = info;
       });
     }
 
@@ -82,11 +111,38 @@
 
     pageRef.on("value", snap => {
       const val = snap.val();
-      if (val && val >= 1 && val <= totalPages && val !== pageNum) {
+      if (val && val >= 1 && pdfDoc && val <= totalPages && val !== pageNum) {
         pageNum = val;
         renderPage(pageNum);
       }
     });
+
+    // 認証
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        isPresenter = true;
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('presenter-controls').style.display = 'block';
+        document.getElementById('viewer-controls').style.display = 'none';
+        document.getElementById('user-info').textContent = `ログイン中: ${user.email}`;
+      } else {
+        isPresenter = false;
+        document.getElementById('login-form').style.display = 'block';
+        document.getElementById('presenter-controls').style.display = 'none';
+        document.getElementById('viewer-controls').style.display = 'block';
+      }
+    });
+
+    function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      auth.signInWithEmailAndPassword(email, password)
+        .catch(err => alert("ログイン失敗: " + err.message));
+    }
+
+    function logout() {
+      auth.signOut();
+    }
   </script>
 </body>
 </html>
