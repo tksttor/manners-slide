@@ -40,16 +40,10 @@
       flex-direction: column;
       align-items: center;
       gap: 12px;
-      height: 60vh;
     }
     #preview-canvas {
-      border: 2px solid #fff;
-      border-radius: 8px;
-      background: #fff;
-      width: auto;
-      height: calc(60vh - 40px);
       display: block;
-      object-fit: contain;
+      border-radius: 8px;
     }
     #page-info { color: #fff; font-size: 22px; text-align: center; }
   </style>
@@ -156,9 +150,11 @@
 
     function renderPreview(num) {
       pdfDoc.getPage(num).then(function(page) {
-        const maxH = window.innerHeight * 0.60 - 40;
         const baseViewport = page.getViewport({ scale: 1 });
-        const scale = maxH / baseViewport.height;
+        // ボタンと同じ高さ(60vh)からページ番号表示分を引いた高さに合わせる
+        const maxH = window.innerHeight * 0.60 - 50;
+        const maxW = window.innerWidth * 0.36;
+        const scale = Math.min(maxW / baseViewport.width, maxH / baseViewport.height);
         const viewport = page.getViewport({ scale });
         previewCanvas.width = viewport.width;
         previewCanvas.height = viewport.height;
