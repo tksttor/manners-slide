@@ -17,29 +17,49 @@
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      gap: 40px;
+      gap: 24px;
       width: 100vw;
       height: 100vh;
+      padding: 20px;
     }
     .nav-btn {
-      width: 40vw;
+      width: 25vw;
       height: 60vh;
-      font-size: 48px;
+      font-size: 36px;
       cursor: pointer;
       border-radius: 16px;
       border: none;
       background: #fff;
       font-weight: bold;
+      flex-shrink: 0;
     }
     .nav-btn:active { background: #ccc; }
-    #page-info { color: #fff; font-size: 28px; text-align: center; min-width: 120px; }
+
+    #preview-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    #preview-canvas {
+      border: 2px solid #fff;
+      border-radius: 8px;
+      background: #fff;
+      max-width: 36vw;
+      max-height: 50vh;
+      display: block;
+    }
+    #page-info { color: #fff; font-size: 22px; text-align: center; }
   </style>
 </head>
 <body>
 
   <div id="controls">
     <button class="nav-btn" id="prev">◀ 前へ</button>
-    <span id="page-info"></span>
+    <div id="preview-area">
+      <canvas id="preview-canvas"></canvas>
+      <span id="page-info"></span>
+    </div>
     <button class="nav-btn" id="next">次へ ▶</button>
   </div>
 
@@ -67,17 +87,31 @@
 
     const canvas = document.getElementById('pdf-canvas');
     const ctx = canvas.getContext('2d');
+    const previewCanvas = document.getElementById('preview-canvas');
+    const previewCtx = previewCanvas.getContext('2d');
     const statusDiv = document.getElementById('status');
 
     if (isPresenterMode) {
       canvas.style.display = 'none';
       document.getElementById('controls').style.display = 'flex';
 
+      // プレビュー用にPDFを読み込む
+      pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+        pdfDoc = pdfDoc_;
+        totalPages = pdfDoc.numPages;
+        pageRef.once("value").then(snap => {
+          const val = snap.val();
+          pageNum = (val && val >= 1 && val <= totalPages) ? val : 1;
+          renderPreview(pageNum);
+        });
+      });
+
       pageRef.on("value", snap => {
         const val = snap.val();
         if (val) {
           pageNum = val;
-          document.getElementById('page-info').textContent = `ページ ${val}`;
+          document.getElementById('page-info').textContent = `ページ ${val} / ${totalPages || ''}`;
+          if (pdfDoc) renderPreview(val);
         }
       });
 
@@ -107,12 +141,30 @@
       pdfDoc.getPage(num).then(function(page) {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
+        const dpr = window.devicePixelRatio || 1;
         const baseViewport = page.getViewport({ scale: 1 });
-        const scale = Math.min(vw / baseViewport.width, vh / baseViewport.height);
+        const scale = Math.min(vw / baseViewport.width, vh / baseViewport.height) * dpr;
         const viewport = page.getViewport({ scale });
         canvas.width = viewport.width;
         canvas.height = viewport.height;
+        canvas.style.width = (viewport.width / dpr) + 'px';
+        canvas.style.height = (viewport.height / dpr) + 'px';
         page.render({ canvasContext: ctx, viewport });
+      });
+    }
+
+    function renderPreview(num) {
+      pdfDoc.getPage(num).then(function(page) {
+        const maxW = window.innerWidth * 0.36;
+        const maxH = window.innerHeight * 0.50;
+        const baseViewport = page.getViewport({ scale: 1 });
+        const scale = Math.min(maxW / baseViewport.width, maxH / baseViewport.height);
+        const viewport = page.getViewport({ scale });
+        previewCanvas.width = viewport.width;
+        previewCanvas.height = viewport.height;
+        previewCanvas.style.width = viewport.width + 'px';
+        previewCanvas.style.height = viewport.height + 'px';
+        page.render({ canvasContext: previewCtx, viewport });
       });
     }
 
@@ -125,6 +177,7 @@
       setPage(pageNum - 1);
     };
     document.getElementById('next').onclick = function() {
+      if (pageNum >= totalPages) return;
       setPage(pageNum + 1);
     };
   </script>
