@@ -151,15 +151,19 @@
     function renderPreview(num) {
       pdfDoc.getPage(num).then(function(page) {
         const baseViewport = page.getViewport({ scale: 1 });
-        // ボタンと同じ高さ(60vh)からページ番号表示分を引いた高さに合わせる
+        const pdfW = baseViewport.width;
+        const pdfH = baseViewport.height;
+        // ボタンと同じ高さ(60vh)からページ番号表示分(50px)を引いた高さに収める
+        // 横幅は残りのスペース(100vw - ボタン2つ分 - gap) に収める
         const maxH = window.innerHeight * 0.60 - 50;
-        const maxW = window.innerWidth * 0.36;
-        const scale = Math.min(maxW / baseViewport.width, maxH / baseViewport.height);
+        const maxW = window.innerWidth - (window.innerWidth * 0.25 * 2) - (24 * 2) - 40;
+        const scale = Math.min(maxW / pdfW, maxH / pdfH);
         const viewport = page.getViewport({ scale });
+        // CSSは一切使わずcanvasの実ピクセルだけで制御
         previewCanvas.width = viewport.width;
         previewCanvas.height = viewport.height;
-        previewCanvas.style.width = viewport.width + 'px';
-        previewCanvas.style.height = viewport.height + 'px';
+        previewCanvas.style.width = '';
+        previewCanvas.style.height = '';
         page.render({ canvasContext: previewCtx, viewport });
       });
     }
