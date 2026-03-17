@@ -6,49 +6,11 @@
   <title>PDFスライド同期ビューア</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
     #pdf-canvas { max-width: 100vw; max-height: 100vh; display: block; }
-
-    /* 発表者UI */
-    #presenter-ui {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 40px;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    #login-form {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      width: 80%;
-    }
-    #login-form input {
-      width: 100%;
-      padding: 20px;
-      font-size: 24px;
-      border-radius: 8px;
-      border: none;
-    }
-    #login-form button {
-      width: 100%;
-      padding: 20px;
-      font-size: 28px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      background: #4a90e2;
-      color: #fff;
-      font-weight: bold;
-    }
 
     #controls {
       display: none;
@@ -75,17 +37,10 @@
 </head>
 <body>
 
-  <div id="presenter-ui">
-    <div id="login-form">
-      <input type="email" id="email" placeholder="メールアドレス" />
-      <input type="password" id="password" placeholder="パスワード" />
-      <button onclick="login()">ログイン</button>
-    </div>
-    <div id="controls">
-      <button class="nav-btn" id="prev">◀ 前へ</button>
-      <span id="page-info"></span>
-      <button class="nav-btn" id="next">次へ ▶</button>
-    </div>
+  <div id="controls">
+    <button class="nav-btn" id="prev">◀ 前へ</button>
+    <span id="page-info"></span>
+    <button class="nav-btn" id="next">次へ ▶</button>
   </div>
 
   <canvas id="pdf-canvas"></canvas>
@@ -104,7 +59,6 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const auth = firebase.auth();
     const pageRef = db.ref("pdfPage");
 
     const isPresenterMode = location.search.includes("presenter");
@@ -117,7 +71,7 @@
 
     if (isPresenterMode) {
       canvas.style.display = 'none';
-      document.getElementById('presenter-ui').style.display = 'flex';
+      document.getElementById('controls').style.display = 'flex';
 
       pageRef.on("value", snap => {
         const val = snap.val();
@@ -173,24 +127,6 @@
     document.getElementById('next').onclick = function() {
       setPage(pageNum + 1);
     };
-
-    auth.onAuthStateChanged(user => {
-      if (!isPresenterMode) return;
-      if (user) {
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('controls').style.display = 'flex';
-      } else {
-        document.getElementById('login-form').style.display = 'flex';
-        document.getElementById('controls').style.display = 'none';
-      }
-    });
-
-    function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      auth.signInWithEmailAndPassword(email, password)
-        .catch(err => alert("ログイン失敗: " + err.message));
-    }
   </script>
 </body>
 </html>
