@@ -40,14 +40,16 @@
       flex-direction: column;
       align-items: center;
       gap: 12px;
+      height: 60vh;
     }
     #preview-canvas {
       border: 2px solid #fff;
       border-radius: 8px;
       background: #fff;
-      max-width: 36vw;
-      max-height: 50vh;
+      width: auto;
+      height: calc(60vh - 40px);
       display: block;
+      object-fit: contain;
     }
     #page-info { color: #fff; font-size: 22px; text-align: center; }
   </style>
@@ -95,7 +97,6 @@
       canvas.style.display = 'none';
       document.getElementById('controls').style.display = 'flex';
 
-      // プレビュー用にPDFを読み込む
       pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
         pdfDoc = pdfDoc_;
         totalPages = pdfDoc.numPages;
@@ -155,10 +156,9 @@
 
     function renderPreview(num) {
       pdfDoc.getPage(num).then(function(page) {
-        const maxW = window.innerWidth * 0.36;
-        const maxH = window.innerHeight * 0.50;
+        const maxH = window.innerHeight * 0.60 - 40;
         const baseViewport = page.getViewport({ scale: 1 });
-        const scale = Math.min(maxW / baseViewport.width, maxH / baseViewport.height);
+        const scale = maxH / baseViewport.height;
         const viewport = page.getViewport({ scale });
         previewCanvas.width = viewport.width;
         previewCanvas.height = viewport.height;
